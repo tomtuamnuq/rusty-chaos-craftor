@@ -20,7 +20,7 @@ fn main() -> eframe::Result<()> {
     eframe::run_native(
         "Rusty Chaos Craftor",
         native_options,
-        Box::new(|cc| Box::new(eframe_template::TemplateApp::new(cc))),
+        Box::new(|cc| Box::new(rusty_chaos_craftor::TemplateApp::new(cc))),
     )
 }
 
