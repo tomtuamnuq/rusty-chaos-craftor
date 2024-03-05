@@ -396,10 +396,7 @@ impl Default for MandelbrotPowerDual {
 
 impl Default for MandelbrotPowerPerplex {
     fn default() -> Self {
-        Self {
-            r: 0.5,
-            n: 5.0,
-        }
+        Self { r: 0.5, n: 5.0 }
     }
 }
 impl Default for MandelbrotPowerQuaternion {

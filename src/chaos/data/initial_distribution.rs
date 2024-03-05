@@ -2,7 +2,9 @@ use super::ChaosFloat;
 use crate::chaos::labels::ChaosDescription;
 use paste::paste;
 use rand_distr;
+use serde::{Deserialize, Serialize};
 use std::fmt;
+
 use strum_macros::IntoStaticStr;
 type Feature = Vec<ChaosFloat>;
 pub type Features = Vec<Feature>;
@@ -288,7 +290,7 @@ macro_rules! generate_initial_distribution_variants {
         }
 
         $(
-            #[derive(PartialEq, Clone, Copy)]
+            #[derive(PartialEq, Clone, Copy, Serialize, Deserialize)]
             pub struct $variant {
                 $(pub $field: ChaosFloat,)*
             }

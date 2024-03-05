@@ -1,7 +1,6 @@
 use crate::chaos::data::*;
-use crate::chaos::functions::{Integrator, OdeSolverTrait};
+use crate::chaos::functions::{empty_into_iter, Integrator, OdeSolverTrait};
 use crate::chaos::Particle;
-use crate::utils::empty_into_iter;
 use std::collections::{BTreeMap, BTreeSet};
 use std::marker::PhantomData;
 use std::ops::AddAssign;

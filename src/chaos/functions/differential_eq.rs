@@ -10,7 +10,11 @@ use std::vec::Vec;
 use super::chaotic_function_configs::*;
 use crate::chaos::data::*;
 use crate::chaos::labels::{ChaosDescription, ChaosFormula};
-use crate::utils::empty_into_iter;
+
+pub fn empty_into_iter<P>() -> IntoIter<P> {
+    let v: Vec<P> = Vec::new();
+    v.into_iter()
+}
 
 pub trait Integrator {
     type Input;

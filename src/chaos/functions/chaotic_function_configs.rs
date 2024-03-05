@@ -2,12 +2,13 @@ use super::discrete_maps::check_zaslavskii;
 use crate::chaos::data::ChaosFloat;
 use crate::chaos::fractal::*;
 use paste::paste;
+use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
 use std::fmt;
 macro_rules! generate_chaotic_function_configs {
     ($($variant:ident $par_check_code:ident{ $($field:ident: ($field_min:expr, $field_max:expr)),* } ),*)=> {
         $(
-            #[derive(PartialEq, Clone, Debug)]
+            #[derive(PartialEq, Clone, Debug, Deserialize, Serialize)]
             pub struct $variant {
                 $(pub $field: ChaosFloat,)*
             }
