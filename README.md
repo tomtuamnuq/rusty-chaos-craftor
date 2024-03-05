@@ -1,6 +1,6 @@
 # RustyChaosCraftor
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE) ![Deployment](https://github.com/tomtuamnuq/rusty-chaos-craftor/workflows/pages.yml/badge.svg) ![Tests](https://github.com/tomtuamnuq/rusty-chaos-craftor/workflows/test.yml/badge.svg) 
-[Live App ![Live App](./assets/favicon.ico)](https://tomtuamnuq.github.io/rusty-chaos-craftor/) 
+[Live App ![Live App](./assets/icon_ios_touch_192.png)](https://tomtuamnuq.github.io/rusty-chaos-craftor/) 
 ## Overview
 RustyChaosCraftor is an interactive exploration tool for visualizing dynamics in chaotic systems. Driven by a fascination with the complex patterns emerging from simple mathematical constructs, this project aims to provide profound insights into chaos theory through highly customizable visualization techniques.
 
