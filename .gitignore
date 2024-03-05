@@ -1,2 +1,5 @@
 /target
 /dist
+temp.rs
+temp.txt
+.vscode/

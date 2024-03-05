@@ -18,7 +18,7 @@ fn main() -> eframe::Result<()> {
         ..Default::default()
     };
     eframe::run_native(
-        "eframe template",
+        "Rusty Chaos Craftor",
         native_options,
         Box::new(|cc| Box::new(eframe_template::TemplateApp::new(cc))),
     )
@@ -35,9 +35,9 @@ fn main() {
     wasm_bindgen_futures::spawn_local(async {
         eframe::WebRunner::new()
             .start(
-                "the_canvas_id", // hardcode it
+                "chaos_canvas", // hardcode it
                 web_options,
-                Box::new(|cc| Box::new(eframe_template::TemplateApp::new(cc))),
+                Box::new(|cc| Box::new(rusty_chaos_craftor::TemplateApp::new(cc))),
             )
             .await
             .expect("failed to start eframe");

@@ -1,47 +1,65 @@
 [package]
-name = "eframe_template"
-version = "0.1.0"
-authors = ["Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"]
+name = "rusty-chaos-craftor"
+version = "1.0.0"
+authors = ["Tom Krüger <76523782+tomtuamnuq@users.noreply.github.com>"]
 edition = "2021"
-rust-version = "1.72"
-
+rust-version = "1.76"
 
 [dependencies]
-egui = "0.26.0"
-eframe = { version = "0.26.0", default-features = false, features = [
-    "accesskit",     # Make egui comptaible with screen readers. NOTE: adds a lot of dependencies.
+egui = "0.25"
+eframe = { version = "0.25", default-features = false, features = [
     "default_fonts", # Embed the default egui fonts.
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
     "persistence",   # Enable restoring app state when restarting the app.
-] }
-log = "0.4"
+]}
+epaint = "0.25"
+egui_plot = "0.25"
+plotters = "0.3"
 
-# You only need serde if you want app persistence:
+log = "0.4"
 serde = { version = "1", features = ["derive"] }
+anyhow = "1.0"
+paste = "1.0"
+delegate = "0.12"
+strum_macros = "0.25"
+strum = "0.25"
+web-time = "1.1.0"
+
+ode_solvers = "0.3"
+rand_distr = "0.4"
+rand = "0.8"
+nalgebra = "0.32"
+num-dual = "0.8"
 
 # native:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 env_logger = "0.10"
+num_cpus = "1.16"
 
 # web:
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen-futures = "0.4"
+getrandom = { version = "0.2", features = ["js"] }
 
+# switch manually between local git and upstream
+egui-plotter = { git = "https://github.com/Gip-Gip/egui-plotter.git", branch = "main" }
+perplex_num = { git = "https://github.com/tomtuamnuq/perplex_num.git", branch = "main" }
+#egui-plotter = { path = "../egui-plotter" }
+#perplex_num = { path = "../perplex_num" }
 
 [profile.release]
-opt-level = 2 # fast and small wasm
+opt-level = 3 # all optimizations
+codegen-units = 1
+lto = "fat"
+panic = "abort"
+strip = "symbols"
 
-# Optimize all dependencies even in debug builds:
+[profile.dev]
+opt-level = 0
+lto = "off"
+panic = "abort"
+strip = "symbols"
+
+# Optimize dependencies in debug builds (keeps plotting performant):
 [profile.dev.package."*"]
-opt-level = 2
-
-
-[patch.crates-io]
-
-# If you want to use the bleeding edge version of egui and eframe:
-# egui = { git = "https://github.com/emilk/egui", branch = "master" }
-# eframe = { git = "https://github.com/emilk/egui", branch = "master" }
-
-# If you fork https://github.com/emilk/egui you can test with:
-# egui = { path = "../egui/crates/egui" }
-# eframe = { path = "../egui/crates/eframe" }
+opt-level = 2 # default 0

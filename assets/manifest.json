@@ -1,6 +1,6 @@
 {
-  "name": "egui Template PWA",
-  "short_name": "egui-template-pwa",
+  "name": "RustyChaosCraftor PWA",
+  "short_name": "rusty-chaos-craftor-pwa",
   "icons": [
     {
       "src": "./icon-256.png",
