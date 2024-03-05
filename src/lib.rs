@@ -1,4 +1,5 @@
 #![warn(clippy::all, rust_2018_idioms)]
-mod app;
+mod gui;
 mod chaos;
-pub use app::TemplateApp;
+mod utils;
+pub use gui::ChaosApp;

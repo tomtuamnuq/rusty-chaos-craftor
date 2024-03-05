@@ -20,7 +20,7 @@ fn main() -> eframe::Result<()> {
     eframe::run_native(
         "Rusty Chaos Craftor",
         native_options,
-        Box::new(|cc| Box::new(rusty_chaos_craftor::TemplateApp::new(cc))),
+        Box::new(|cc| Box::new(rusty_chaos_craftor::ChaosApp::new(cc))),
     )
 }
 
@@ -37,7 +37,7 @@ fn main() {
             .start(
                 "chaos_canvas", // hardcode it
                 web_options,
-                Box::new(|cc| Box::new(rusty_chaos_craftor::TemplateApp::new(cc))),
+                Box::new(|cc| Box::new(rusty_chaos_craftor::ChaosApp::new(cc))),
             )
             .await
             .expect("failed to start eframe");
