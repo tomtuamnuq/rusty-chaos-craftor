@@ -1,9 +1,9 @@
-use egui::Ui;
-use serde::{Deserialize, Serialize};
 use crate::{
     chaos::{data::*, labels::*},
     gui::combo_box_from_string,
 };
+use egui::Ui;
+use serde::{Deserialize, Serialize};
 pub fn flat_map_data_vec<V: FromStateVec + ValidStateCheck, P>(
     data_vec: Vec<&ChaosData<V>>,
     f: impl Fn(&Vec<Option<V>>) -> Vec<Option<P>>,
@@ -27,8 +27,8 @@ pub enum StateProjection {
     Par(&'static str),
     S(usize),
 }
-impl Default for StateProjection{
-    fn default() -> Self{
+impl Default for StateProjection {
+    fn default() -> Self {
         StateProjection::S(0)
     }
 }

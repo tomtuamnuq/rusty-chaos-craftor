@@ -7,7 +7,10 @@ use self::main_panels::*;
 use crate::chaos::{benchmark::ChaosInitSchema, *};
 use crate::gui::tooltips::*;
 use anyhow::{bail, Error};
-use egui::{style::Interaction, Align2, Context, CursorIcon, FontFamily, FontId, TextStyle, Ui};
+use egui::{
+    style::{Interaction, Visuals},
+    Align2, Context, CursorIcon, FontFamily, FontId, TextStyle, Ui,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Deserialize, Serialize)]
@@ -54,6 +57,7 @@ impl ChaosApp {
                 // selectable_labels: false,
                 // multi_widget_text_select: false
             };
+            style.visuals = Visuals::dark();
             style.visuals.interact_cursor = Some(CursorIcon::PointingHand);
         }); // Disable feathering as it causes artifacts with Plotters backend
         ctx.tessellation_options_mut(|tess_options| {

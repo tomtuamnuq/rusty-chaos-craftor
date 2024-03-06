@@ -9,8 +9,8 @@ use plotters::prelude::*;
 use crate::chaos::data::*;
 use crate::gui::tooltips::*;
 use crate::gui::*;
-use std::ops::Range;
 use serde::{Deserialize, Serialize};
+use std::ops::Range;
 
 use super::plot_backend::PlotBackend;
 use super::plot_colors::{FromRGB, SeriesColorChoice, SeriesColors, RGB};
@@ -56,8 +56,8 @@ impl FromRGB for RGBColor {
         RGBColor(rgb.0, rgb.1, rgb.2)
     }
 }
-struct Chart3DWithData{
-    pub chart:  Chart<(BackendData, AxisData, Options3D)> 
+struct Chart3DWithData {
+    pub chart: Chart<(BackendData, AxisData, Options3D)>,
 }
 fn configure_axis(chart: &mut Chart3D<'_, '_>, axis_data: &AxisData) {
     let (lx, ly, lz) = (&axis_data.x_label, &axis_data.y_label, &axis_data.z_label);
@@ -92,11 +92,7 @@ fn plot_chaotic_states(
     }));
 }
 
-fn plot_particles(
-    mut chart: Chart3D<'_, '_>,
-    series_holder: &BackendData,
-    options: &Options3D,
-) {
+fn plot_particles(mut chart: Chart3D<'_, '_>, series_holder: &BackendData, options: &Options3D) {
     let particle_size = 2.0 * options.point_size;
     let particle_stroke = 1;
     let particle_opacity = options.point_opacity;
@@ -117,8 +113,7 @@ fn plot_particles(
     };
     let phantom_size = 0.3;
     let _ = chart.draw_series(series_holder.all_styles_and_points_iter().map(|(s, p)| {
-        let color =
-            ShapeStyle::from(s.color.mix(particle_opacity)).stroke_width(particle_stroke);
+        let color = ShapeStyle::from(s.color.mix(particle_opacity)).stroke_width(particle_stroke);
         let positive_marker = if s.markers.positive {
             Text::new(
                 "P",
@@ -193,12 +188,8 @@ fn plot_fractal(mut chart: Chart3D<'_, '_>, series_holder: &BackendData, options
 }
 fn plot_data(chart: Chart3D<'_, '_>, series_holder: &BackendData, options: &Options3D) {
     match series_holder.dimensionality() {
-        DistributionDimensions::State(_) => {
-            plot_chaotic_states(chart, series_holder, options)
-        }
-        DistributionDimensions::Particle(_) => {
-            plot_particles(chart, series_holder, options)
-        }
+        DistributionDimensions::State(_) => plot_chaotic_states(chart, series_holder, options),
+        DistributionDimensions::Particle(_) => plot_particles(chart, series_holder, options),
         DistributionDimensions::Fractal(_) => plot_fractal(chart, series_holder, options),
     };
 }
@@ -233,8 +224,8 @@ fn get_ranges_from_extrema(
     )
 }
 
-impl Default for Chart3DWithData{
-    fn default() -> Self{
+impl Default for Chart3DWithData {
+    fn default() -> Self {
         let chart = Chart::new((
             BackendData::default(),
             AxisData::default(),
@@ -262,11 +253,9 @@ impl Default for Chart3DWithData{
                 }
             };
         }));
-        Self{chart}
+        Self { chart }
     }
 }
-
-
 
 #[derive(Deserialize, Serialize)]
 pub struct Plot3D {
@@ -342,7 +331,6 @@ impl Plot3D {
         self.axis_data_mut().z_label = z_label.into();
     }
 
-    
     fn get_extrema_from_series(points: &Points3D) -> (Point3D, Point3D) {
         let (mut x_min, mut x_max, mut y_min, mut y_max, mut z_min, mut z_max) = (
             VALID_MAX, VALID_MIN, VALID_MAX, VALID_MIN, VALID_MAX, VALID_MIN,

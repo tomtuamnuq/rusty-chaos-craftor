@@ -74,11 +74,10 @@ enum InitialMode {
 
 #[derive(PartialEq, Deserialize, Serialize)]
 struct InitialStateData {
-    
     pub num_state_dims: usize,
-    
+
     open_initial_distributions: [InitialDistributionViewSelection; MAX_NUM_STATE_DIMS],
-    
+
     all_initital_distributions: [InitialDistributionViewData; MAX_NUM_STATE_DIMS],
 }
 
@@ -169,13 +168,12 @@ impl InitialStateData {
 
 #[derive(PartialEq, Deserialize, Serialize)]
 struct InitialParticleData {
-    
     open_initial_distributions_xy: [InitialDistributionViewSelection; DIMS_INIT_PARTICLEXY],
-    
+
     all_initital_distributions_xy: [InitialDistributionViewData; DIMS_INIT_PARTICLEXY],
-    
+
     open_initial_distributions_xyz: [InitialDistributionViewSelection; DIMS_INIT_PARTICLEXYZ],
-    
+
     all_initital_distributions_xyz: [InitialDistributionViewData; DIMS_INIT_PARTICLEXYZ],
 }
 
@@ -433,24 +431,23 @@ impl ParticleMode {
 
 #[derive(PartialEq, Deserialize, Serialize)]
 struct InitialFractalData {
-    
     open_initial_distributions_complex:
         [InitialDistributionViewSelection; DIMS_INIT_FRACTALCOMPLEX],
-    
+
     all_initital_distributions_complex: [InitialDistributionViewData; DIMS_INIT_FRACTALCOMPLEX],
-    
+
     open_initial_distributions_dual: [InitialDistributionViewSelection; DIMS_INIT_FRACTALDUAL],
-    
+
     all_initital_distributions_dual: [InitialDistributionViewData; DIMS_INIT_FRACTALDUAL],
-    
+
     open_initial_distributions_perplex:
         [InitialDistributionViewSelection; DIMS_INIT_FRACTALPERPLEX],
-    
+
     all_initital_distributions_perplex: [InitialDistributionViewData; DIMS_INIT_FRACTALPERPLEX],
-    
+
     open_initial_distributions_quaternion:
         [InitialDistributionViewSelection; DIMS_INIT_FRACTALQUATERNION],
-        
+
     all_initital_distributions_quaternion:
         [InitialDistributionViewData; DIMS_INIT_FRACTALQUATERNION],
 }
@@ -744,7 +741,7 @@ pub struct InitialPanel {
 impl Default for InitialPanel {
     fn default() -> Self {
         Self {
-            num_samples: 10,
+            num_samples: 100,
             init_mode: Default::default(),
             particle_mode: Default::default(),
             fractal_mode: Default::default(),
@@ -763,12 +760,8 @@ impl InitialPanel {
     pub fn initial_distributions(&self) -> InitialDistributionConfig {
         match self.init_mode {
             InitialMode::States => self.states.initial_distributions(),
-            InitialMode::Particle => self
-                .particles
-                .initial_distributions(self.particle_mode),
-            InitialMode::Fractals => self
-                .fractals
-                .initial_distributions(self.fractal_mode),
+            InitialMode::Particle => self.particles.initial_distributions(self.particle_mode),
+            InitialMode::Fractals => self.fractals.initial_distributions(self.fractal_mode),
         }
     }
 
@@ -779,12 +772,8 @@ impl InitialPanel {
     fn count_open_meshes(&self) -> usize {
         let open_selections: &[InitialDistributionViewSelection] = match self.init_mode {
             InitialMode::States => self.states.open_selections(),
-            InitialMode::Particle => self
-                .particles
-                .open_selections(self.particle_mode),
-            InitialMode::Fractals => self
-                .fractals
-                .open_selections(self.fractal_mode),
+            InitialMode::Particle => self.particles.open_selections(self.particle_mode),
+            InitialMode::Fractals => self.fractals.open_selections(self.fractal_mode),
         };
         let mut ct = 0;
         for open in open_selections {
@@ -867,8 +856,7 @@ impl InitialPanel {
     fn particle_selection_ui(&mut self, ui: &mut Ui) {
         egui::ScrollArea::both().show(ui, |ui| {
             ui.vertical(|ui| {
-                self.particles
-                    .selection_ui(self.particle_mode, ui);
+                self.particles.selection_ui(self.particle_mode, ui);
             });
         });
     }
@@ -884,8 +872,7 @@ impl InitialPanel {
         });
         egui::ScrollArea::horizontal().show(ui, |ui| {
             ui.vertical(|ui| {
-                self.fractals
-                    .selection_ui(self.fractal_mode, ui);
+                self.fractals.selection_ui(self.fractal_mode, ui);
             });
         });
     }

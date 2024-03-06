@@ -9,8 +9,8 @@ use serde::{Deserialize, Serialize};
 
 use super::plot_backend::PlotBackend;
 use super::plot_colors::{FromRGB, SeriesColorChoice, SeriesColors, RGB};
-use super::plot_utils::{StateProjection, StateProjectionSelection, MAX_NUM_PROJECTIONS};
 use super::plot_styles::DEFAULT_RADIUS;
+use super::plot_utils::{StateProjection, StateProjectionSelection, MAX_NUM_PROJECTIONS};
 
 pub type Point2D = PlotPoint;
 pub type Points2D = Vec<Option<Point2D>>;
