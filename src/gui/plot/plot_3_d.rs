@@ -6,10 +6,11 @@ use plotters::coord::ranged3d::Cartesian3d;
 use plotters::coord::types::RangedCoordf64;
 use plotters::prelude::*;
 
+use crate::chaos::data::*;
 use crate::gui::tooltips::*;
 use crate::gui::*;
-use crate::chaos::data::*;
 use std::ops::Range;
+use serde::{Deserialize, Serialize};
 
 use super::plot_backend::PlotBackend;
 use super::plot_colors::{FromRGB, SeriesColorChoice, SeriesColors, RGB};
@@ -55,18 +56,240 @@ impl FromRGB for RGBColor {
         RGBColor(rgb.0, rgb.1, rgb.2)
     }
 }
+struct Chart3DWithData{
+    pub chart:  Chart<(BackendData, AxisData, Options3D)> 
+}
+fn configure_axis(chart: &mut Chart3D<'_, '_>, axis_data: &AxisData) {
+    let (lx, ly, lz) = (&axis_data.x_label, &axis_data.y_label, &axis_data.z_label);
+    let _ = chart
+        .configure_axes()
+        .label_style(("sans-serif", 12.0).into_font().color(&RED))
+        .tick_size(5)
+        .x_labels(3)
+        .y_labels(3)
+        .z_labels(3)
+        .max_light_lines(2)
+        .axis_panel_style(GREEN.mix(0.10))
+        .bold_grid_style(BLACK.mix(0.2))
+        .light_grid_style(BLACK.mix(0.10))
+        .x_formatter(&|x| format!("{lx}={x}"))
+        .y_formatter(&|y| format!("{ly}={y}"))
+        .z_formatter(&|z| format!("{lz}={z}"))
+        .draw();
+}
+
+fn plot_chaotic_states(
+    mut chart: Chart3D<'_, '_>,
+    series_holder: &BackendData,
+    options: &Options3D,
+) {
+    let _ = chart.draw_series(series_holder.all_styles_and_points_iter().map(|(s, p)| {
+        Circle::new(
+            *p,
+            options.point_size,
+            ShapeStyle::from(s.color.mix(options.point_opacity)).filled(),
+        )
+    }));
+}
+
+fn plot_particles(
+    mut chart: Chart3D<'_, '_>,
+    series_holder: &BackendData,
+    options: &Options3D,
+) {
+    let particle_size = 2.0 * options.point_size;
+    let particle_stroke = 1;
+    let particle_opacity = options.point_opacity;
+    if options.show_particle_radius {
+        let _ = chart.draw_series(series_holder.all_styles_and_points_iter().map(|(s, p)| {
+            let (x, y, z) = *p;
+            let r = s.radius;
+            Rectangle::new(
+                [(x - r, y - r, z - r), (x + r, y + r, z + r)],
+                ShapeStyle::from(s.color.mix(particle_opacity)).stroke_width(particle_stroke),
+            )
+        }));
+    }
+    let guest_coord_zero = (0, 0);
+    let particle_marker_shift = {
+        let half_size = (particle_size / 2.0).round() as i32;
+        (-half_size, -half_size)
+    };
+    let phantom_size = 0.3;
+    let _ = chart.draw_series(series_holder.all_styles_and_points_iter().map(|(s, p)| {
+        let color =
+            ShapeStyle::from(s.color.mix(particle_opacity)).stroke_width(particle_stroke);
+        let positive_marker = if s.markers.positive {
+            Text::new(
+                "P",
+                particle_marker_shift,
+                ("sans-serif", particle_size).into_font(),
+            )
+        } else {
+            Text::new(
+                "",
+                guest_coord_zero,
+                ("sans-serif", phantom_size).into_font(),
+            )
+        };
+        let negative_marker = if s.markers.negative {
+            Text::new(
+                "N",
+                particle_marker_shift,
+                ("sans-serif", particle_size).into_font(),
+            )
+        } else {
+            Text::new(
+                "",
+                guest_coord_zero,
+                ("sans-serif", phantom_size).into_font(),
+            )
+        };
+        let special_marker = if s.markers.special {
+            Cross::new(guest_coord_zero, particle_size / 2.0, color)
+        } else {
+            Cross::new(guest_coord_zero, phantom_size, BLACK)
+        };
+        EmptyElement::at(*p) + positive_marker + negative_marker + special_marker
+    }));
+}
+fn plot_fractal(mut chart: Chart3D<'_, '_>, series_holder: &BackendData, options: &Options3D) {
+    let fractal_size = options.point_size;
+    let fractal_stroke = 2;
+    let fractal_opacity = options.point_opacity;
+    let (positive_size, positive_color) = if options.show_fractal_set {
+        (
+            fractal_size,
+            ShapeStyle::from(series_holder.positive_color().mix(fractal_opacity))
+                .stroke_width(fractal_stroke),
+        )
+    } else {
+        (0.01, ShapeStyle::from(BLACK.mix(0.01)))
+    };
+    let special_color = ShapeStyle::from(series_holder.special_color().mix(fractal_opacity))
+        .stroke_width(fractal_stroke);
+
+    let _ = chart.draw_series(series_holder.all_styles_and_points_iter().map(|(s, p)| {
+        if s.markers.special {
+            Circle::new(*p, fractal_size, special_color)
+        } else if s.markers.positive {
+            Circle::new(*p, positive_size, positive_color)
+        } else if s.markers.negative {
+            Circle::new(
+                *p,
+                fractal_size,
+                s.color
+                    .mix(fractal_opacity / 2.0)
+                    .stroke_width(fractal_stroke / 2),
+            )
+        } else {
+            Circle::new(
+                *p,
+                fractal_size,
+                s.color.mix(fractal_opacity).stroke_width(fractal_stroke),
+            )
+        }
+    }));
+}
+fn plot_data(chart: Chart3D<'_, '_>, series_holder: &BackendData, options: &Options3D) {
+    match series_holder.dimensionality() {
+        DistributionDimensions::State(_) => {
+            plot_chaotic_states(chart, series_holder, options)
+        }
+        DistributionDimensions::Particle(_) => {
+            plot_particles(chart, series_holder, options)
+        }
+        DistributionDimensions::Fractal(_) => plot_fractal(chart, series_holder, options),
+    };
+}
+
+fn get_ranges_from_extrema(
+    plot_backend: &BackendData,
+) -> (Range<ChaosFloat>, Range<ChaosFloat>, Range<ChaosFloat>) {
+    let (mut x_min, mut x_max, mut y_min, mut y_max, mut z_min, mut z_max) = (
+        VALID_MAX, VALID_MIN, VALID_MAX, VALID_MIN, VALID_MAX, VALID_MIN,
+    );
+    plot_backend.extrema_iter().for_each(|(p_min, p_max)| {
+        x_min = x_min.min(p_min.0);
+        x_max = x_max.max(p_max.0);
+        y_min = y_min.min(p_min.1);
+        y_max = y_max.max(p_max.1);
+        z_min = z_min.min(p_min.2);
+        z_max = z_max.max(p_max.2);
+    });
+    (
+        Range {
+            start: x_min,
+            end: x_max,
+        },
+        Range {
+            start: y_min,
+            end: y_max,
+        },
+        Range {
+            start: z_min,
+            end: z_max,
+        },
+    )
+}
+
+impl Default for Chart3DWithData{
+    fn default() -> Self{
+        let chart = Chart::new((
+            BackendData::default(),
+            AxisData::default(),
+            Options3D::default(),
+        ))
+        .yaw(0.5)
+        .pitch(0.15)
+        .scale(0.9)
+        .builder_cb(Box::new(|area, transform, data| {
+            let (x_range, y_range, z_range) = get_ranges_from_extrema(&data.0);
+            let chart_build_res = ChartBuilder::on(area)
+                .margin(10)
+                .build_cartesian_3d(x_range, y_range, z_range);
+            match chart_build_res {
+                Err(_) => (),
+                Ok(mut chart) => {
+                    chart.with_projection(|mut pb| {
+                        pb.yaw = transform.yaw;
+                        pb.pitch = transform.pitch;
+                        pb.scale = transform.scale;
+                        pb.into_matrix()
+                    });
+                    configure_axis(&mut chart, &data.1);
+                    plot_data(chart, &data.0, &data.2);
+                }
+            };
+        }));
+        Self{chart}
+    }
+}
+
+
+
+#[derive(Deserialize, Serialize)]
 pub struct Plot3D {
-    chart: Chart<(BackendData, AxisData, Options3D)>,
+    #[serde(skip)] // TODO split options and data
+    chart_with_data: Chart3DWithData,
+    #[serde(skip)] // projections are set when first series is added
     projection_x: StateProjection,
+    #[serde(skip)]
     selection_x: StateProjectionSelection,
+    #[serde(skip)]
     projection_y: StateProjection,
+    #[serde(skip)]
     selection_y: StateProjectionSelection,
+    #[serde(skip)]
     projection_z: StateProjection,
+    #[serde(skip)]
     selection_z: StateProjectionSelection,
+    #[serde(skip)] // TODO set in PlotBackend
     selection_color: StateProjectionSelection,
 }
 
 impl PartialEq for Plot3D {
+    // TODO all fields should be considered
     fn eq(&self, other: &Self) -> bool {
         let self_data = self.series_holder();
         let other_data = other.series_holder();
@@ -81,35 +304,8 @@ impl PartialEq for Plot3D {
 impl Eq for Plot3D {}
 impl Default for Plot3D {
     fn default() -> Self {
-        let chart = Chart::new((
-            BackendData::default(),
-            AxisData::default(),
-            Options3D::default(),
-        ))
-        .yaw(0.5)
-        .pitch(0.15)
-        .scale(0.9) // TODO scale
-        .builder_cb(Box::new(|area, transform, data| {
-            let (x_range, y_range, z_range) = Self::get_ranges_from_extrema(&data.0);
-            let chart_build_res = ChartBuilder::on(area)
-                .margin(10)
-                .build_cartesian_3d(x_range, y_range, z_range);
-            match chart_build_res {
-                Err(_) => (),
-                Ok(mut chart) => {
-                    chart.with_projection(|mut pb| {
-                        pb.yaw = transform.yaw;
-                        pb.pitch = transform.pitch;
-                        pb.scale = transform.scale;
-                        pb.into_matrix()
-                    });
-                    Self::configure_axis(&mut chart, &data.1);
-                    Self::plot_data(&mut chart, &data.0, &data.2);
-                }
-            };
-        }));
         Self {
-            chart,
+            chart_with_data: Default::default(),
             // chaos app starts without params and 2 states (without using z)
             projection_x: StateProjection::S(0),
             selection_x: StateProjectionSelection::S0,
@@ -124,16 +320,16 @@ impl Default for Plot3D {
 
 impl Plot3D {
     fn series_holder(&self) -> &BackendData {
-        &self.chart.get_data().0
+        &self.chart_with_data.chart.get_data().0
     }
     fn series_holder_mut(&mut self) -> &mut BackendData {
-        &mut self.chart.get_data_mut().0
+        &mut self.chart_with_data.chart.get_data_mut().0
     }
     fn axis_data_mut(&mut self) -> &mut AxisData {
-        &mut self.chart.get_data_mut().1
+        &mut self.chart_with_data.chart.get_data_mut().1
     }
     fn options_mut(&mut self) -> &mut Options3D {
-        &mut self.chart.get_data_mut().2
+        &mut self.chart_with_data.chart.get_data_mut().2
     }
 
     fn set_x_label(&mut self, x_label: impl Into<String>) {
@@ -146,180 +342,7 @@ impl Plot3D {
         self.axis_data_mut().z_label = z_label.into();
     }
 
-    fn configure_axis(chart: &mut Chart3D<'_, '_>, axis_data: &AxisData) {
-        let (lx, ly, lz) = (&axis_data.x_label, &axis_data.y_label, &axis_data.z_label);
-        let _ = chart
-            .configure_axes()
-            .label_style(("sans-serif", 12.0).into_font().color(&RED))
-            .tick_size(5)
-            .x_labels(3)
-            .y_labels(3)
-            .z_labels(3)
-            .max_light_lines(2)
-            .axis_panel_style(GREEN.mix(0.10))
-            .bold_grid_style(BLACK.mix(0.2))
-            .light_grid_style(BLACK.mix(0.10))
-            .x_formatter(&|x| format!("{lx}={x}"))
-            .y_formatter(&|y| format!("{ly}={y}"))
-            .z_formatter(&|z| format!("{lz}={z}"))
-            .draw();
-    }
-
-    fn plot_chaotic_states(
-        chart: &mut Chart3D<'_, '_>,
-        series_holder: &BackendData,
-        options: &Options3D,
-    ) {
-        let _ = chart.draw_series(series_holder.all_styles_and_points_iter().map(|(s, p)| {
-            Circle::new(
-                *p,
-                options.point_size,
-                ShapeStyle::from(s.color.mix(options.point_opacity)).filled(),
-            )
-        }));
-    }
-
-    fn plot_particles(
-        chart: &mut Chart3D<'_, '_>,
-        series_holder: &BackendData,
-        options: &Options3D,
-    ) {
-        let particle_size = 2.0 * options.point_size;
-        let particle_stroke = 1;
-        let particle_opacity = options.point_opacity;
-        if options.show_particle_radius {
-            let _ = chart.draw_series(series_holder.all_styles_and_points_iter().map(|(s, p)| {
-                let (x, y, z) = *p;
-                let r = s.radius;
-                Rectangle::new(
-                    [(x - r, y - r, z - r), (x + r, y + r, z + r)],
-                    ShapeStyle::from(s.color.mix(particle_opacity)).stroke_width(particle_stroke),
-                )
-            }));
-        }
-        let guest_coord_zero = (0, 0);
-        let particle_marker_shift = {
-            let half_size = (particle_size / 2.0).round() as i32;
-            (-half_size, -half_size)
-        };
-        let phantom_size = 0.3;
-        let _ = chart.draw_series(series_holder.all_styles_and_points_iter().map(|(s, p)| {
-            let color =
-                ShapeStyle::from(s.color.mix(particle_opacity)).stroke_width(particle_stroke);
-            let positive_marker = if s.markers.positive {
-                Text::new(
-                    "P",
-                    particle_marker_shift,
-                    ("sans-serif", particle_size).into_font(),
-                )
-            } else {
-                Text::new(
-                    "",
-                    guest_coord_zero,
-                    ("sans-serif", phantom_size).into_font(),
-                )
-            };
-            let negative_marker = if s.markers.negative {
-                Text::new(
-                    "N",
-                    particle_marker_shift,
-                    ("sans-serif", particle_size).into_font(),
-                )
-            } else {
-                Text::new(
-                    "",
-                    guest_coord_zero,
-                    ("sans-serif", phantom_size).into_font(),
-                )
-            };
-            let special_marker = if s.markers.special {
-                Cross::new(guest_coord_zero, particle_size / 2.0, color)
-            } else {
-                Cross::new(guest_coord_zero, phantom_size, BLACK)
-            };
-            EmptyElement::at(*p) + positive_marker + negative_marker + special_marker
-        }));
-    }
-    fn plot_fractal(chart: &mut Chart3D<'_, '_>, series_holder: &BackendData, options: &Options3D) {
-        let fractal_size = options.point_size;
-        let fractal_stroke = 2;
-        let fractal_opacity = options.point_opacity;
-        let (positive_size, positive_color) = if options.show_fractal_set {
-            (
-                fractal_size,
-                ShapeStyle::from(series_holder.positive_color().mix(fractal_opacity))
-                    .stroke_width(fractal_stroke),
-            )
-        } else {
-            (0.01, ShapeStyle::from(BLACK.mix(0.01)))
-        };
-        let special_color = ShapeStyle::from(series_holder.special_color().mix(fractal_opacity))
-            .stroke_width(fractal_stroke);
-
-        let _ = chart.draw_series(series_holder.all_styles_and_points_iter().map(|(s, p)| {
-            if s.markers.special {
-                Circle::new(*p, fractal_size, special_color)
-            } else if s.markers.positive {
-                Circle::new(*p, positive_size, positive_color)
-            } else if s.markers.negative {
-                Circle::new(
-                    *p,
-                    fractal_size,
-                    s.color
-                        .mix(fractal_opacity / 2.0)
-                        .stroke_width(fractal_stroke / 2),
-                )
-            } else {
-                Circle::new(
-                    *p,
-                    fractal_size,
-                    s.color.mix(fractal_opacity).stroke_width(fractal_stroke),
-                )
-            }
-        }));
-    }
-    fn plot_data(chart: &mut Chart3D<'_, '_>, series_holder: &BackendData, options: &Options3D) {
-        match series_holder.dimensionality() {
-            DistributionDimensions::State(_) => {
-                Self::plot_chaotic_states(chart, series_holder, options)
-            }
-            DistributionDimensions::Particle(_) => {
-                Self::plot_particles(chart, series_holder, options)
-            }
-            DistributionDimensions::Fractal(_) => Self::plot_fractal(chart, series_holder, options),
-        };
-    }
-
-    fn get_ranges_from_extrema(
-        plot_backend: &BackendData,
-    ) -> (Range<ChaosFloat>, Range<ChaosFloat>, Range<ChaosFloat>) {
-        let (mut x_min, mut x_max, mut y_min, mut y_max, mut z_min, mut z_max) = (
-            VALID_MAX, VALID_MIN, VALID_MAX, VALID_MIN, VALID_MAX, VALID_MIN,
-        );
-        plot_backend.extrema_iter().for_each(|(p_min, p_max)| {
-            x_min = x_min.min(p_min.0);
-            x_max = x_max.max(p_max.0);
-            y_min = y_min.min(p_min.1);
-            y_max = y_max.max(p_max.1);
-            z_min = z_min.min(p_min.2);
-            z_max = z_max.max(p_max.2);
-        });
-        (
-            Range {
-                start: x_min,
-                end: x_max,
-            },
-            Range {
-                start: y_min,
-                end: y_max,
-            },
-            Range {
-                start: z_min,
-                end: z_max,
-            },
-        )
-    }
-
+    
     fn get_extrema_from_series(points: &Points3D) -> (Point3D, Point3D) {
         let (mut x_min, mut x_max, mut y_min, mut y_max, mut z_min, mut z_max) = (
             VALID_MAX, VALID_MIN, VALID_MAX, VALID_MIN, VALID_MAX, VALID_MIN,
@@ -665,8 +688,8 @@ impl Plot3D {
         let mouse_config = MouseConfig::default()
             .rotate(mouse_is_over_plot)
             .pitch_scale(0.02); // TODO test drag and zoom
-        self.chart.set_mouse(mouse_config);
-        self.chart.draw(ui);
+        self.chart_with_data.chart.set_mouse(mouse_config);
+        self.chart_with_data.chart.draw(ui);
     }
     delegate! {
         to self.series_holder(){

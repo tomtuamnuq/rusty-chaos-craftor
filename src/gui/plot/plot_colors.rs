@@ -2,6 +2,7 @@ use crate::chaos::data::*;
 
 use plotters::style::colors::colormaps::*;
 use plotters::style::{Color, HSLColor, RGBColor};
+use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
 use super::plot_backend::DEFAULT_MAX_SERIES;
@@ -17,7 +18,7 @@ impl FromRGB for RGB {
     }
 }
 
-#[derive(PartialEq, Eq, Default, Clone, Copy, EnumIter)]
+#[derive(PartialEq, Eq, Default, Clone, Copy, EnumIter, Deserialize, Serialize)]
 pub enum SeriesColors {
     BlackWhite,
     Bone,

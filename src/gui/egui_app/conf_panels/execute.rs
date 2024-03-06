@@ -1,20 +1,25 @@
 use crate::{
-    gui::{add_hyperlink, integer_slider, tooltips::*},
     chaos::data::{DistributionDimensions, FractalDimensions},
     chaos::{DiscreteMapVec, OdeSystemSolverVec},
+    gui::{add_hyperlink, integer_slider, tooltips::*},
 };
 
 use super::execute_chaotic_function_view::{
     ChaosFunctionViewData, DifferentialSystemView, DiscreteMapView,
 };
+
 use egui::{ScrollArea, Ui};
+use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
-#[derive(PartialEq)]
+
+#[derive(PartialEq, Deserialize, Serialize)]
 pub struct ExecutionPanel {
     num_executions: usize,
     chaotic_discrete_map: Option<DiscreteMapView>,
     chaotic_diff_system: Option<DifferentialSystemView>,
+    #[cfg_attr(target_arch = "wasm32", serde(skip))] // TODO causes wasm memory bug, works native
     view_data: ChaosFunctionViewData,
+    #[serde(skip)] // start without an initialized function
     pub selected_function_was_set: bool,
 }
 
@@ -190,20 +195,20 @@ impl ExecutionPanel {
         self.check_compatible_chaotic_function(&dims);
         ui.vertical(|ui| {
             ScrollArea::vertical().show(ui, |ui| {
-            match dims {
-                DistributionDimensions::State(_) => {
+                match dims {
+                    DistributionDimensions::State(_) => {
                         ui.horizontal(|ui| {
                             self.discrete_map_listing(ui, &dims);
                             ui.separator();
                             self.diff_system_ui(ui, &dims);
                         });
-                }
-                DistributionDimensions::Particle(n) => {
-                    ui.heading(format!("{n}D Particles"));
-                    ui.separator();
-                    self.particle_ui(ui, n);
-                }
-                DistributionDimensions::Fractal(ref fractal_ring) => {
+                    }
+                    DistributionDimensions::Particle(n) => {
+                        ui.heading(format!("{n}D Particles"));
+                        ui.separator();
+                        self.particle_ui(ui, n);
+                    }
+                    DistributionDimensions::Fractal(ref fractal_ring) => {
                         let ring_type: &'static str = fractal_ring.into();
                         ui.horizontal(|ui| {
                             ui.heading(format!("{ring_type} Fractals "));
@@ -218,8 +223,8 @@ impl ExecutionPanel {
                         ui.horizontal(|ui| {
                             self.fractal_ui(ui, &dims);
                         });
-                }
-            };
+                    }
+                };
             });
         });
         ScrollArea::both().show(ui, |ui| {

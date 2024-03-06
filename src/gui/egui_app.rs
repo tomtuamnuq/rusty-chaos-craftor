@@ -4,20 +4,27 @@ mod main_panels;
 use self::conf_panels::*;
 pub use self::egui_utils::*;
 use self::main_panels::*;
-use crate::gui::tooltips::*;
 use crate::chaos::{benchmark::ChaosInitSchema, *};
+use crate::gui::tooltips::*;
 use anyhow::{bail, Error};
 use egui::{style::Interaction, Align2, Context, CursorIcon, FontFamily, FontId, TextStyle, Ui};
-#[derive(Default)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Default, Deserialize, Serialize)]
 pub struct ChaosApp {
+    #[serde(skip)] // start with initial panel since chaotic function is not set
     open_conf_panel: ConfPanel,
     initial_panel: InitialPanel,
     execute_panel: ExecutionPanel,
     plot_panel: PlotPanel,
+    #[serde(skip)] // benchmark must be reinitiated manually
     benchmark_panel: BenchmarkPanel,
     open_main_panel: MainPanel,
+    #[serde(skip)] // avoid saving ChaosData arrays
     chaos_controller: ChaosExecutionController,
+    #[serde(skip)] // start without initiating function
     init_chaotic_function: bool,
+    #[serde(skip)] // always start without executing
     executes: bool,
 }
 
@@ -52,6 +59,10 @@ impl ChaosApp {
         ctx.tessellation_options_mut(|tess_options| {
             tess_options.feathering = false;
         });
+        // Load previous app state (if any).
+        if let Some(storage) = cc.storage {
+            return eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
+        }
         Self::default()
     }
 
@@ -259,6 +270,10 @@ impl ChaosApp {
 }
 
 impl eframe::App for ChaosApp {
+    /// Called by the frame work to save state before shutdown.
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        eframe::set_value(storage, eframe::APP_KEY, self);
+    }
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         let mut mouse_over_main_panel = true;
         conf_window("Configuration", ctx, Align2::LEFT_TOP).show(ctx, |ui| {

@@ -1,15 +1,17 @@
-use crate::gui::{float_slider, group_horizontal, tooltips::*, PARAMETER_MAX, PARAMETER_MIN};
 use crate::chaos::data::*;
+use crate::gui::{float_slider, group_horizontal, tooltips::*, PARAMETER_MAX, PARAMETER_MIN};
 use delegate::delegate;
+
 use egui::Ui;
 use egui::{Color32, Shape, Stroke};
 use egui_plot::{format_number, log_grid_spacer, Plot, PlotPoint, PlotPoints, PlotUi, Points};
+use serde::{Deserialize, Serialize};
 
 use super::plot_backend::PlotBackend;
 use super::plot_colors::{FromRGB, SeriesColorChoice, SeriesColors, RGB};
 use super::plot_utils::{StateProjection, StateProjectionSelection, MAX_NUM_PROJECTIONS};
-
 use super::plot_styles::DEFAULT_RADIUS;
+
 pub type Point2D = PlotPoint;
 pub type Points2D = Vec<Option<Point2D>>;
 impl FromRGB for Color32 {
@@ -18,18 +20,27 @@ impl FromRGB for Color32 {
     }
 }
 
+#[derive(Deserialize, Serialize)]
 pub struct Plot2D {
+    #[serde(skip)] // derive
     plot_backend: PlotBackend<Point2D, Color32>,
+    #[serde(skip)] // projections are set when first series is added
     projection_x: StateProjection,
+    #[serde(skip)]
     selection_x: StateProjectionSelection,
+    #[serde(skip)]
     projection_y: StateProjection,
+    #[serde(skip)]
     selection_y: StateProjectionSelection,
+    // TODO set in PlotBackend
     selection_color: StateProjectionSelection,
+    #[serde(skip)] // start without data
     mean_number_of_shapes_guess: usize,
     point_size: f64,
 }
 
 impl PartialEq for Plot2D {
+    // TODO all fields should be considered
     fn eq(&self, other: &Self) -> bool {
         self.projection_x == other.projection_x
             && self.projection_y == other.projection_y

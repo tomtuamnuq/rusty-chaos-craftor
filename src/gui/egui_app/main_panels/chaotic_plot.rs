@@ -1,18 +1,26 @@
+use crate::chaos::data::ChaosDataVec;
 use crate::gui::plot::*;
 use crate::gui::tooltips::*;
 use crate::gui::*;
-use crate::chaos::data::ChaosDataVec;
 use crate::utils::Timer;
 use egui::Ui;
+use serde::{Deserialize, Serialize};
 
+#[derive(Deserialize, Serialize)]
 pub struct PlotPanel {
+    #[serde(skip)] // start without generating data immediately
     pub generate_new_data: bool,
     reinit_data: bool,
+    #[serde(skip)] // TODO derive
     plot_2_d: Plot2D,
+    #[serde(skip)] // TODO derive
     plot_3_d: Plot3D,
     plot_backend: PlotBackendVariant,
+    #[serde(skip)] // TODO set in PlotBackend
     save_trajectory: bool,
+    #[serde(skip)] // TODO set in PlotBackend
     max_num_series: usize,
+    #[serde(skip)] // TODO set in PlotBackend
     point_colormap: SeriesColors,
     frame_rate: usize,
     timer: Timer,

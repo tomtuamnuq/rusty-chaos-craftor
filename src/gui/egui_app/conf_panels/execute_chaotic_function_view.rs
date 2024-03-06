@@ -1,17 +1,18 @@
 use super::execute::SelectedChaoticFunction;
-use crate::gui::tooltips::*;
-use crate::gui::*;
-use crate::chaos::functions as chaotic_function_configs;
 use crate::chaos::{
     data::*,
     fractal::*,
+    functions::*,
     labels::{ChaosDescription, ChaosFormula},
     DiscreteMapVec, OdeSolver, OdeSystemSolverVec, ParticleXYSystemSolver, ParticleXYZSystemSolver,
     SimpleDiscreteMap,
 };
+use crate::gui::tooltips::*;
+use crate::gui::*;
 
 use egui::Ui;
 use paste::paste;
+use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
 const PARAMETER_DELTA: f64 = 0.1;
@@ -82,7 +83,7 @@ fn parameter_linspace(par_min: f64, par_max: f64, num_params: usize) -> Vec<f64>
 macro_rules! create_and_implement_map_view_variants {
     ([$( $discrete_map:ident $discrete_state:expr),*] [$( $fractal_fn:ident),*] [$( $continuous_ode:ident $continuous_state:expr),*] [$( $particle_dim:ident),*]) => {
         paste!{
-            #[derive(PartialEq, Eq, Default, Clone, Copy, EnumIter)]
+            #[derive(PartialEq, Eq, Default, Clone, Copy, EnumIter, Deserialize, Serialize)]
             pub enum DiscreteMapView {
                 #[default]
                 $(
@@ -161,7 +162,7 @@ macro_rules! create_and_implement_map_view_variants {
                 }
             }
 
-            #[derive(PartialEq, Eq, Default, Clone, Copy, EnumIter)]
+            #[derive(PartialEq, Eq, Default, Clone, Copy, EnumIter, Deserialize, Serialize)]
             pub enum DifferentialSystemView {
                 #[default]
                 $(
@@ -198,26 +199,26 @@ macro_rules! create_and_implement_map_view_variants {
                 }
             }
             #[allow(non_snake_case)] // for ease of copy paste
-            #[derive(Default, PartialEq)]
+            #[derive(Default, PartialEq, Deserialize, Serialize)]
             pub struct ChaosFunctionViewData {
                 $(
-                    [<$discrete_map:lower>]: $discrete_map,
+                    [<$discrete_map:lower>]: [<$discrete_map View>],
                 )*
                 $(
-                    [<mandelbrot $fractal_fn Complex>]: [<Mandelbrot $fractal_fn Complex>],
-                    [<mandelbrot $fractal_fn Dual>]: [<Mandelbrot $fractal_fn Dual>],
-                    [<mandelbrot $fractal_fn Perplex>]: [<Mandelbrot $fractal_fn Perplex>],
-                    [<mandelbrot $fractal_fn Quaternion>]: [<Mandelbrot $fractal_fn Quaternion>],
-                    [<julia $fractal_fn Complex>]: [<Julia $fractal_fn Complex>],
-                    [<julia $fractal_fn Dual>]: [<Julia $fractal_fn Dual>],
-                    [<julia $fractal_fn Perplex>]: [<Julia $fractal_fn Perplex>],
-                    [<julia $fractal_fn Quaternion>]: [<Julia $fractal_fn Quaternion>],
+                    [<mandelbrot $fractal_fn Complex>]: [<Mandelbrot $fractal_fn ComplexView>],
+                    [<mandelbrot $fractal_fn Dual>]: [<Mandelbrot $fractal_fn DualView>],
+                    [<mandelbrot $fractal_fn Perplex>]: [<Mandelbrot $fractal_fn PerplexView>],
+                    [<mandelbrot $fractal_fn Quaternion>]: [<Mandelbrot $fractal_fn QuaternionView>],
+                    [<julia $fractal_fn Complex>]: [<Julia $fractal_fn ComplexView>],
+                    [<julia $fractal_fn Dual>]: [<Julia $fractal_fn DualView>],
+                    [<julia $fractal_fn Perplex>]: [<Julia $fractal_fn PerplexView>],
+                    [<julia $fractal_fn Quaternion>]: [<Julia $fractal_fn QuaternionView>],
                 )*
                 $(
-                    [<$continuous_ode:lower>]: $continuous_ode,
+                    [<$continuous_ode:lower>]: [<$continuous_ode View>],
                 )*
                 $(
-                    [<particle $particle_dim>]: [<Particle $particle_dim>],
+                    [<particle $particle_dim>]: [<Particle $particle_dim View>],
                 )*
             }
 
@@ -400,14 +401,14 @@ create_and_implement_map_view_variants! {
 macro_rules! generate_view_variant {
     ($variant:ident { $([$field:ident, $field_label:expr]),* }) => {
         paste!{
-            #[derive(PartialEq, Clone)]
-            pub struct $variant {
-                data: chaotic_function_configs::$variant,
+            #[derive(PartialEq, Clone, Deserialize, Serialize)]
+            pub struct [<$variant View>] {
+                data: $variant, // TODO serde skip necessary if wasm compile fails with error 101 and status 9
                 num_params: usize,
                 $([<range_ $field>]: Option<(f64,f64)>,)*
             }
 
-            impl $variant {
+            impl [<$variant View>] {
                 #[allow(dead_code)]
                 fn reset_ranges(&mut self){
                     $( self.[<range_ $field>] = None ;)*
@@ -431,7 +432,7 @@ macro_rules! generate_view_variant {
                     $(
                         group_horizontal(ui,|ui| {
                             let par_label = $field_label;
-                            let allowed_range = chaotic_function_configs::$variant::[<RANGE_ $field:upper>];
+                            let allowed_range = $variant::[<RANGE_ $field:upper>];
                             let is_no_range = self.[<range_ $field>].is_none();
                             let range_label = format!("Range {}", par_label);
                             let tooltip = if is_no_range{
@@ -458,7 +459,7 @@ macro_rules! generate_view_variant {
                     };
                 }
             }
-            impl Default for $variant{
+            impl Default for [<$variant View>]{
                 fn default()->Self{
                     Self{
                         data: Default::default(),
@@ -477,8 +478,8 @@ macro_rules! impl_discrete_variants {
                 generate_view_variant!{
                     $variant { $([$field, $field_label]),* }
                 }
-                impl From<$variant> for SelectedChaoticFunction{
-                    fn from(val: $variant)->Self{
+                impl From<[<$variant View>]> for SelectedChaoticFunction{
+                    fn from(val: [<$variant View>])->Self{
                         $(
                             if let Some((par_min, par_max)) = val.[<range_ $field>]{
                                 let par_values = parameter_linspace(par_min, par_max, val.num_params);
@@ -587,8 +588,8 @@ macro_rules! impl_continuous_variants {
                 generate_view_variant!{
                     $variant { $([$field, $field_label]),* }
                 }
-                impl From<$variant> for SelectedChaoticFunction{
-                    fn from(val: $variant)->Self{
+                impl From<[<$variant View>]> for SelectedChaoticFunction{
+                    fn from(val: [<$variant View>])->Self{
                         $(
                             if let Some((par_min, par_max)) = val.[<range_ $field>]{
                                 let par_values = parameter_linspace(par_min, par_max, val.num_params);

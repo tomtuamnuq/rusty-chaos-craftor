@@ -1,6 +1,6 @@
+use crate::chaos::benchmark::*;
 use crate::gui::tooltips::*;
 use crate::gui::*;
-use crate::chaos::benchmark::*;
 use egui::Ui;
 use egui_plot::{HLine, Plot, PlotPoint, PlotPoints, Points, VLine};
 

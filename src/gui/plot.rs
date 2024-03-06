@@ -8,9 +8,10 @@ mod plot_utils;
 pub use plot_2_d::Plot2D;
 pub use plot_3_d::Plot3D;
 pub use plot_colors::SeriesColors;
+use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
-#[derive(PartialEq, Eq, Default, Clone, Copy, EnumIter)]
+#[derive(PartialEq, Eq, Default, Clone, Copy, EnumIter, Deserialize, Serialize)]
 pub enum PlotBackendVariant {
     #[default]
     EguiPlot2D,

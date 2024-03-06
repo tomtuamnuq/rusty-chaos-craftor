@@ -2,12 +2,12 @@ mod execute;
 mod execute_chaotic_function_view;
 mod initial;
 mod initial_distribution_view;
-use strum_macros::EnumIter;
-
 pub use self::execute::*;
 pub use self::initial::InitialPanel;
+use serde::{Deserialize, Serialize};
+use strum_macros::EnumIter;
 
-#[derive(PartialEq, Eq, Default, Clone, Copy, EnumIter)]
+#[derive(PartialEq, Eq, Default, Clone, Copy, EnumIter, Deserialize, Serialize)]
 pub enum ConfPanel {
     #[default]
     Initial,

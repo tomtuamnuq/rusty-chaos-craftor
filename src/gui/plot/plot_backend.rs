@@ -246,7 +246,7 @@ impl<P, C: FromRGB + Clone> PlotBackend<P, C> {
 mod tests {
 
     use super::*;
-    use crate::{gui::plot::plot_colors::RGB, chaos::data::*};
+    use crate::{chaos::data::*, gui::plot::plot_colors::RGB};
     #[test]
     fn test_state2_style_creation() {
         let num_samples = 2;

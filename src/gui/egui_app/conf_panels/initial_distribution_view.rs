@@ -1,8 +1,9 @@
-use crate::gui::add_hyperlink;
-use crate::chaos::data::{self as chaos_creation}; // avoid name collision
+use crate::chaos::data::*;
 use crate::chaos::ChaosDescription;
+use crate::gui::add_hyperlink;
 use egui::{Response, Ui};
 use paste::paste;
+use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
 fn parameter_view(
@@ -24,17 +25,17 @@ macro_rules! generate_initial_distribution_views {
     ($($variant:ident { $($field:ident),* }),*) => {
         paste!{
 
-            #[derive(PartialEq, Eq, Default, Copy, Clone, Debug, EnumIter)]
+            #[derive(PartialEq, Eq, Default, Copy, Clone, Debug, EnumIter, Deserialize, Serialize)]
             pub enum InitialDistributionView {
                 #[default]
                 $(
                     $variant,
                 )*
             }
-            #[derive(PartialEq, Default)]
+            #[derive(PartialEq, Default, Deserialize, Serialize)]
             pub struct InitialDistributionViewData {
                 $(
-                    pub [<$variant:lower>]: $variant,
+                    pub [<$variant:lower>]: [<$variant View>],
                 )*
             }
 
@@ -42,7 +43,7 @@ macro_rules! generate_initial_distribution_views {
                 pub fn map_initial_distribution_view_to_data(
                     &self,
                     view: &InitialDistributionView,
-                ) -> chaos_creation::InitialDistributionVariant {
+                ) -> InitialDistributionVariant {
                     match view {
                         $(
                             InitialDistributionView::$variant => self.[<$variant:lower>].to_initial_variant(),
@@ -59,17 +60,17 @@ macro_rules! generate_initial_distribution_views {
                 }
             }
             $(
-                #[derive(PartialEq, Default)]
-                pub struct $variant {
-                    pub data: chaos_creation::$variant,
+                #[derive(PartialEq, Default, Deserialize, Serialize)]
+                pub struct [<$variant View>] {
+                    pub data: $variant,
                 }
-                impl $variant {
-                    fn to_initial_variant(&self) -> chaos_creation::InitialDistributionVariant {
-                        chaos_creation::InitialDistributionVariant::$variant(self.data)
+                impl [<$variant View>] {
+                    fn to_initial_variant(&self) -> InitialDistributionVariant {
+                        InitialDistributionVariant::$variant(self.data)
                     }
                     pub fn ui(&mut self, ui: &mut Ui) {
                         $(
-                            let range = chaos_creation::$variant::[<RANGE_ $field:upper>];
+                            let range = $variant::[<RANGE_ $field:upper>];
                             let response = parameter_view(&mut self.data.$field, stringify!($field), range, ui);
                             if response.changed() {
                                 self.data.par_range_check();
