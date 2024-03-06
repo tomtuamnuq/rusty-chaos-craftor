@@ -11,22 +11,18 @@ pub struct PlotPanel {
     #[serde(skip)] // start without generating data immediately
     pub generate_new_data: bool,
     reinit_data: bool,
-    #[serde(skip)] // TODO derive
     plot_2_d: Plot2D,
-    #[serde(skip)] // TODO derive
     plot_3_d: Plot3D,
     plot_backend: PlotBackendVariant,
-    #[serde(skip)] // TODO set in PlotBackend
     save_trajectory: bool,
-    #[serde(skip)] // TODO set in PlotBackend
     max_num_series: usize,
-    #[serde(skip)] // TODO set in PlotBackend
+    last_max_num_series: usize,
     point_colormap: SeriesColors,
     frame_rate: usize,
     timer: Timer,
 }
 
-const MAX_NUM_SERIES: usize = 20;
+const DEFAULT_NUM_SERIES: usize = 20;
 impl Default for PlotPanel {
     fn default() -> Self {
         Self {
@@ -36,9 +32,10 @@ impl Default for PlotPanel {
             plot_3_d: Default::default(),
             plot_backend: Default::default(),
             save_trajectory: true,
-            max_num_series: MAX_NUM_SERIES,
+            max_num_series: DEFAULT_NUM_SERIES,
+            last_max_num_series: DEFAULT_NUM_SERIES,
             point_colormap: Default::default(),
-            frame_rate: 1,
+            frame_rate: 10,
             timer: Default::default(),
         }
     }
@@ -51,10 +48,12 @@ impl PlotPanel {
         match self.plot_backend {
             PlotBackendVariant::EguiPlot2D => {
                 self.plot_2_d.set_point_colormap(self.point_colormap);
+                self.plot_2_d.set_max_num_series(self.max_num_series);
                 self.plot_2_d.add_point_series(data);
             }
             PlotBackendVariant::Plotters => {
                 self.plot_3_d.set_point_colormap(self.point_colormap);
+                self.plot_3_d.set_max_num_series(self.max_num_series);
                 self.plot_3_d.add_point_series(data);
             }
         }
@@ -63,11 +62,6 @@ impl PlotPanel {
     pub fn reset_plot_trajectory(&mut self) {
         self.plot_2_d.reset_data();
         self.plot_3_d.reset_data();
-    }
-
-    fn set_plot_trajectory_steps(&mut self) {
-        self.plot_2_d.set_max_num_series(self.max_num_series);
-        self.plot_3_d.set_max_num_series(self.max_num_series);
     }
 
     pub fn set_no_parametrized_plotting(&mut self) {
@@ -131,23 +125,20 @@ impl PlotPanel {
                 TIP_TRAJECTORY,
             ) {
                 if !self.save_trajectory {
+                    self.last_max_num_series = self.max_num_series;
                     self.max_num_series = 1;
-                    self.set_plot_trajectory_steps();
                 } else {
-                    self.max_num_series = MAX_NUM_SERIES;
-                    self.set_plot_trajectory_steps();
+                    self.max_num_series = self.last_max_num_series;
                 }
             }
-            if self.save_trajectory
-                && integer_slider(
+            if self.save_trajectory {
+                integer_slider(
                     LABEL_NUM_SERIES,
                     &mut self.max_num_series,
                     100,
                     ui,
                     TIP_NUM_SERIES,
-                )
-            {
-                self.set_plot_trajectory_steps();
+                );
             }
         });
         ui.horizontal(|ui| {

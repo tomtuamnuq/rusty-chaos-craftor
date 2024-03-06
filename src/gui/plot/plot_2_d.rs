@@ -22,7 +22,7 @@ impl FromRGB for Color32 {
 
 #[derive(Deserialize, Serialize)]
 pub struct Plot2D {
-    #[serde(skip)] // derive
+    #[serde(skip)] // avoid saving points
     plot_backend: PlotBackend<Point2D, Color32>,
     #[serde(skip)] // projections are set when first series is added
     projection_x: StateProjection,
@@ -32,7 +32,7 @@ pub struct Plot2D {
     projection_y: StateProjection,
     #[serde(skip)]
     selection_y: StateProjectionSelection,
-    // TODO set in PlotBackend
+    #[serde(skip)]
     selection_color: StateProjectionSelection,
     #[serde(skip)] // start without data
     mean_number_of_shapes_guess: usize,
@@ -55,13 +55,13 @@ impl Default for Plot2D {
     fn default() -> Self {
         Self {
             plot_backend: Default::default(),
-            // chaos app starts without params and 2 states
-            projection_x: StateProjection::S(0),
-            selection_x: StateProjectionSelection::S0,
-            projection_y: StateProjection::S(1),
-            selection_y: StateProjectionSelection::S1,
-            selection_color: StateProjectionSelection::S0,
-            mean_number_of_shapes_guess: 10,
+            // chaos app starts without data - projections are set when data is added
+            projection_x: Default::default(),
+            selection_x: Default::default(),
+            projection_y: Default::default(),
+            selection_y: Default::default(),
+            selection_color: Default::default(),
+            mean_number_of_shapes_guess: 100,
             point_size: DEFAULT_RADIUS,
         }
     }

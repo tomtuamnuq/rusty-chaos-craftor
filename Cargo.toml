@@ -59,6 +59,7 @@ opt-level = 0
 lto = "off"
 panic = "abort"
 strip = "symbols"
+incremental = false
 
 # Optimize dependencies in debug builds (keeps plotting performant):
 [profile.dev.package."*"]

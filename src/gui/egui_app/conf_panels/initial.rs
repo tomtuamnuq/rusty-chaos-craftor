@@ -74,10 +74,7 @@ enum InitialMode {
 
 #[derive(PartialEq, Deserialize, Serialize)]
 struct InitialStateData {
-    pub num_state_dims: usize,
-
     open_initial_distributions: [InitialDistributionViewSelection; MAX_NUM_STATE_DIMS],
-
     all_initital_distributions: [InitialDistributionViewData; MAX_NUM_STATE_DIMS],
 }
 
@@ -95,7 +92,6 @@ impl Default for InitialStateData {
         let initial_distributions: [InitialDistributionViewData; MAX_NUM_STATE_DIMS] =
             std::array::from_fn(|_| InitialDistributionViewData::default());
         Self {
-            num_state_dims: 2,
             open_initial_distributions: open,
             all_initital_distributions: initial_distributions,
         }
@@ -103,41 +99,12 @@ impl Default for InitialStateData {
 }
 
 impl InitialStateData {
-    fn num_states_selection_ui(&mut self, ui: &mut Ui) {
-        let minus_button_activated = self.num_state_dims > 1;
-        if clickable_button(
-            "-",
-            false,
-            minus_button_activated,
-            ui,
-            TIP_BUTTON_DECREASE_NUM_STATES,
-        ) {
-            self.num_state_dims -= 1;
-        }
-        add_label(
-            format!("Dims: {}", self.num_state_dims).as_str(),
-            ui,
-            TIP_DIMS,
-        );
-        let plus_button_activated = self.num_state_dims < MAX_NUM_STATE_DIMS;
-        if clickable_button(
-            "+",
-            false,
-            plus_button_activated,
-            ui,
-            TIP_BUTTON_INCREASE_NUM_STATES,
-        ) {
-            self.num_state_dims += 1;
-        }
+    fn open_selections(&self, num_state_dims: usize) -> &[InitialDistributionViewSelection] {
+        self.open_initial_distributions.split_at(num_state_dims).0
     }
-    fn open_selections(&self) -> &[InitialDistributionViewSelection] {
-        self.open_initial_distributions
-            .split_at(self.num_state_dims)
-            .0
-    }
-    fn initial_distributions(&self) -> InitialDistributionConfig {
+    fn initial_distributions(&self, num_state_dims: usize) -> InitialDistributionConfig {
         InitialDistributionConfig::States(
-            (0..self.num_state_dims)
+            (0..num_state_dims)
                 .map(|i| {
                     generate_initital_distribution_variant(
                         &self.open_initial_distributions,
@@ -148,8 +115,8 @@ impl InitialStateData {
                 .collect(),
         )
     }
-    fn selection_ui(&mut self, ui: &mut Ui) {
-        for i in 0..self.num_state_dims {
+    fn selection_ui(&mut self, num_state_dims: usize, ui: &mut Ui) {
+        for i in 0..num_state_dims {
             let label = format!("S{}", i + 1);
             let tooltip = format!(" Select initital distribution for state {} ", i + 1);
             let open = &mut self.open_initial_distributions[i];
@@ -729,6 +696,7 @@ impl InitialDistributionViewSelection {
 pub struct InitialPanel {
     num_samples: usize,
     init_mode: InitialMode,
+    num_state_dims: usize,
     particle_mode: ParticleMode,
     fractal_mode: FractalMode,
     #[cfg_attr(target_arch = "wasm32", serde(skip))] // TODO causes wasm memory bug, works native
@@ -743,6 +711,7 @@ impl Default for InitialPanel {
         Self {
             num_samples: 100,
             init_mode: Default::default(),
+            num_state_dims: 2,
             particle_mode: Default::default(),
             fractal_mode: Default::default(),
             states: Default::default(),
@@ -759,19 +728,19 @@ impl InitialPanel {
 
     pub fn initial_distributions(&self) -> InitialDistributionConfig {
         match self.init_mode {
-            InitialMode::States => self.states.initial_distributions(),
+            InitialMode::States => self.states.initial_distributions(self.num_state_dims()),
             InitialMode::Particle => self.particles.initial_distributions(self.particle_mode),
             InitialMode::Fractals => self.fractals.initial_distributions(self.fractal_mode),
         }
     }
 
     fn num_state_dims(&self) -> usize {
-        self.states.num_state_dims
+        self.num_state_dims
     }
 
     fn count_open_meshes(&self) -> usize {
         let open_selections: &[InitialDistributionViewSelection] = match self.init_mode {
-            InitialMode::States => self.states.open_selections(),
+            InitialMode::States => self.states.open_selections(self.num_state_dims()),
             InitialMode::Particle => self.particles.open_selections(self.particle_mode),
             InitialMode::Fractals => self.fractals.open_selections(self.fractal_mode),
         };
@@ -810,6 +779,34 @@ impl InitialPanel {
         }
     }
 
+    fn num_states_selection_ui(&mut self, ui: &mut Ui) {
+        let minus_button_activated = self.num_state_dims > 1;
+        if clickable_button(
+            "-",
+            false,
+            minus_button_activated,
+            ui,
+            TIP_BUTTON_DECREASE_NUM_STATES,
+        ) {
+            self.num_state_dims -= 1;
+        }
+        add_label(
+            format!("Dims: {}", self.num_state_dims).as_str(),
+            ui,
+            TIP_DIMS,
+        );
+        let plus_button_activated = self.num_state_dims < MAX_NUM_STATE_DIMS;
+        if clickable_button(
+            "+",
+            false,
+            plus_button_activated,
+            ui,
+            TIP_BUTTON_INCREASE_NUM_STATES,
+        ) {
+            self.num_state_dims += 1;
+        }
+    }
+
     pub fn ui(&mut self, ui: &mut Ui) {
         group_horizontal(ui, |ui| {
             let _ = combo_box(LABEL_INIT_MODE, &mut self.init_mode, ui, TIP_INIT_MODE);
@@ -826,7 +823,7 @@ impl InitialPanel {
         match self.init_mode {
             InitialMode::States => {
                 group_horizontal(ui, |ui| {
-                    self.states.num_states_selection_ui(ui);
+                    self.num_states_selection_ui(ui);
                 });
                 self.states_selection_ui(ui);
             }
@@ -848,7 +845,7 @@ impl InitialPanel {
     fn states_selection_ui(&mut self, ui: &mut Ui) {
         egui::ScrollArea::horizontal().show(ui, |ui| {
             ui.vertical(|ui| {
-                self.states.selection_ui(ui);
+                self.states.selection_ui(self.num_state_dims(), ui);
             });
         });
     }

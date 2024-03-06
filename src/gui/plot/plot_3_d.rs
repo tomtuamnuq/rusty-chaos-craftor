@@ -35,6 +35,7 @@ impl Default for AxisData {
         }
     }
 }
+#[derive(Clone, Copy, Deserialize, Serialize)]
 struct Options3D {
     pub point_size: f64,
     pub point_opacity: f64,
@@ -257,10 +258,11 @@ impl Default for Chart3DWithData {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Default, Deserialize, Serialize)]
 pub struct Plot3D {
-    #[serde(skip)] // TODO split options and data
+    #[serde(skip)]
     chart_with_data: Chart3DWithData,
+    options: Options3D,
     #[serde(skip)] // projections are set when first series is added
     projection_x: StateProjection,
     #[serde(skip)]
@@ -273,7 +275,7 @@ pub struct Plot3D {
     projection_z: StateProjection,
     #[serde(skip)]
     selection_z: StateProjectionSelection,
-    #[serde(skip)] // TODO set in PlotBackend
+    #[serde(skip)]
     selection_color: StateProjectionSelection,
 }
 
@@ -291,21 +293,6 @@ impl PartialEq for Plot3D {
 }
 
 impl Eq for Plot3D {}
-impl Default for Plot3D {
-    fn default() -> Self {
-        Self {
-            chart_with_data: Default::default(),
-            // chaos app starts without params and 2 states (without using z)
-            projection_x: StateProjection::S(0),
-            selection_x: StateProjectionSelection::S0,
-            projection_y: StateProjection::S(1),
-            selection_y: StateProjectionSelection::S1,
-            projection_z: StateProjection::S(1),
-            selection_z: StateProjectionSelection::S1,
-            selection_color: StateProjectionSelection::S0,
-        }
-    }
-}
 
 impl Plot3D {
     fn series_holder(&self) -> &BackendData {
@@ -318,7 +305,11 @@ impl Plot3D {
         &mut self.chart_with_data.chart.get_data_mut().1
     }
     fn options_mut(&mut self) -> &mut Options3D {
-        &mut self.chart_with_data.chart.get_data_mut().2
+        &mut self.options
+    }
+
+    fn set_options_in_chart(&mut self) {
+        self.chart_with_data.chart.get_data_mut().2 = self.options
     }
 
     fn set_x_label(&mut self, x_label: impl Into<String>) {
@@ -677,6 +668,7 @@ impl Plot3D {
             .rotate(mouse_is_over_plot)
             .pitch_scale(0.02); // TODO test drag and zoom
         self.chart_with_data.chart.set_mouse(mouse_config);
+        self.set_options_in_chart();
         self.chart_with_data.chart.draw(ui);
     }
     delegate! {

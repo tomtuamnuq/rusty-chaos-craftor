@@ -58,7 +58,7 @@ struct PlotDimensions {
 impl Default for PlotDimensions {
     fn default() -> Self {
         Self {
-            dimensions: DistributionDimensions::State(2),
+            dimensions: DistributionDimensions::State(0),
             parameter: None,
             par_values: Vec::new(),
         }
@@ -112,7 +112,7 @@ impl<P, C: FromRGB> Default for PlotBackend<P, C> {
             extrema_holder: Default::default(),
             series_colorer: Default::default(),
             plot_dimensions: Default::default(),
-            projection_color: StateProjection::S(0),
+            projection_color: Default::default(),
             selection_series_color: Default::default(),
         }
     }
