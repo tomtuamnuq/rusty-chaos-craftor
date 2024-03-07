@@ -1,7 +1,7 @@
 use super::plot_2_d::*;
 use super::plot_3_d::*;
-use super::plot_backend::*;
 use super::plot_colors::*;
+use super::plot_data::*;
 use super::plot_styles::*;
 use super::plot_utils::{flat_map_data_vec, flat_map_data_vec_and_parameter};
 use crate::chaos::data::*;
@@ -55,7 +55,7 @@ macro_rules! impl_data_variant_plot {
                 }
             }
 
-            impl<P, C: FromRGB + Clone> PlotBackend<P, C> {
+            impl<P, C: FromRGB + Clone> PlotData<P, C> {
                 pub fn create_styles_for_chaos_data(
                     &mut self,
                     data: &ChaosDataVec<'_>,

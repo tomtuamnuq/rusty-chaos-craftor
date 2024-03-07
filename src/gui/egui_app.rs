@@ -200,13 +200,7 @@ impl ChaosApp {
                 }
             }
             egui::widgets::global_dark_light_mode_buttons(ui);
-            if clickable_button(
-                LABEL_BUTTON_RESET,
-                false,
-                true,
-                ui,
-                TIP_BUTTON_RESET,
-            ) {
+            if clickable_button(LABEL_BUTTON_RESET, false, true, ui, TIP_BUTTON_RESET) {
                 // always enabled avoids comparing all initial distribution and chaotic function parameters
                 *self = Default::default();
             }

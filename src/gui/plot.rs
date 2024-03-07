@@ -1,7 +1,7 @@
 mod plot_2_d;
 mod plot_3_d;
-mod plot_backend;
 mod plot_colors;
+mod plot_data;
 mod plot_data_variants;
 mod plot_styles;
 mod plot_utils;

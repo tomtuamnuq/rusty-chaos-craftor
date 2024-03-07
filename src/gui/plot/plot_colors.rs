@@ -5,7 +5,7 @@ use plotters::style::{Color, HSLColor, RGBColor};
 use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
-use super::plot_backend::DEFAULT_MAX_SERIES;
+use super::plot_data::DEFAULT_MAX_SERIES;
 #[allow(clippy::upper_case_acronyms)]
 pub type RGB = (u8, u8, u8);
 pub trait FromRGB {

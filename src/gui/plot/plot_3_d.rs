@@ -12,13 +12,13 @@ use crate::gui::*;
 use serde::{Deserialize, Serialize};
 use std::ops::Range;
 
-use super::plot_backend::PlotBackend;
 use super::plot_colors::{FromRGB, SeriesColorChoice, SeriesColors, RGB};
+use super::plot_data::PlotData;
 use super::plot_utils::{StateProjection, StateProjectionSelection, MAX_NUM_PROJECTIONS};
 
 pub type Point3D = (ChaosFloat, ChaosFloat, ChaosFloat);
 pub type Points3D = Vec<Option<Point3D>>;
-type BackendData = PlotBackend<Point3D, RGBColor>;
+type PlotData3D = PlotData<Point3D, RGBColor>;
 type Chart3D<'a, 'b> =
     ChartContext<'a, EguiBackend<'b>, Cartesian3d<RangedCoordf64, RangedCoordf64, RangedCoordf64>>;
 
@@ -61,7 +61,7 @@ impl FromRGB for RGBColor {
     }
 }
 struct Chart3DWithData {
-    pub chart: Chart<(BackendData, AxisData, Options3D)>,
+    pub chart: Chart<(PlotData3D, AxisData, Options3D)>,
 }
 impl PartialEq for Chart3DWithData {
     fn eq(&self, other: &Self) -> bool {
@@ -91,7 +91,7 @@ fn configure_axis(chart: &mut Chart3D<'_, '_>, axis_data: &AxisData) {
 
 fn plot_chaotic_states(
     mut chart: Chart3D<'_, '_>,
-    series_holder: &BackendData,
+    series_holder: &PlotData3D,
     options: &Options3D,
 ) {
     let _ = chart.draw_series(series_holder.all_styles_and_points_iter().map(|(s, p)| {
@@ -103,7 +103,7 @@ fn plot_chaotic_states(
     }));
 }
 
-fn plot_particles(mut chart: Chart3D<'_, '_>, series_holder: &BackendData, options: &Options3D) {
+fn plot_particles(mut chart: Chart3D<'_, '_>, series_holder: &PlotData3D, options: &Options3D) {
     let particle_size = 2.0 * options.point_size;
     let particle_stroke = 1;
     let particle_opacity = options.point_opacity;
@@ -159,7 +159,7 @@ fn plot_particles(mut chart: Chart3D<'_, '_>, series_holder: &BackendData, optio
         EmptyElement::at(*p) + positive_marker + negative_marker + special_marker
     }));
 }
-fn plot_fractal(mut chart: Chart3D<'_, '_>, series_holder: &BackendData, options: &Options3D) {
+fn plot_fractal(mut chart: Chart3D<'_, '_>, series_holder: &PlotData3D, options: &Options3D) {
     let fractal_size = options.point_size;
     let fractal_stroke = 2;
     let fractal_opacity = options.point_opacity;
@@ -197,7 +197,7 @@ fn plot_fractal(mut chart: Chart3D<'_, '_>, series_holder: &BackendData, options
         }
     }));
 }
-fn plot_data(chart: Chart3D<'_, '_>, series_holder: &BackendData, options: &Options3D) {
+fn plot_data(chart: Chart3D<'_, '_>, series_holder: &PlotData3D, options: &Options3D) {
     match series_holder.dimensionality() {
         DistributionDimensions::State(_) => plot_chaotic_states(chart, series_holder, options),
         DistributionDimensions::Particle(_) => plot_particles(chart, series_holder, options),
@@ -206,12 +206,12 @@ fn plot_data(chart: Chart3D<'_, '_>, series_holder: &BackendData, options: &Opti
 }
 
 fn get_ranges_from_extrema(
-    plot_backend: &BackendData,
+    plot_data: &PlotData3D,
 ) -> (Range<ChaosFloat>, Range<ChaosFloat>, Range<ChaosFloat>) {
     let (mut x_min, mut x_max, mut y_min, mut y_max, mut z_min, mut z_max) = (
         VALID_MAX, VALID_MIN, VALID_MAX, VALID_MIN, VALID_MAX, VALID_MIN,
     );
-    plot_backend.extrema_iter().for_each(|(p_min, p_max)| {
+    plot_data.extrema_iter().for_each(|(p_min, p_max)| {
         x_min = x_min.min(p_min.0);
         x_max = x_max.max(p_max.0);
         y_min = y_min.min(p_min.1);
@@ -238,7 +238,7 @@ fn get_ranges_from_extrema(
 impl Default for Chart3DWithData {
     fn default() -> Self {
         let chart = Chart::new((
-            BackendData::default(),
+            PlotData3D::default(),
             AxisData::default(),
             Options3D::default(),
         ))
@@ -291,10 +291,10 @@ pub struct Plot3D {
 }
 
 impl Plot3D {
-    fn series_holder(&self) -> &BackendData {
+    fn series_holder(&self) -> &PlotData3D {
         &self.chart_with_data.chart.get_data().0
     }
-    fn series_holder_mut(&mut self) -> &mut BackendData {
+    fn series_holder_mut(&mut self) -> &mut PlotData3D {
         &mut self.chart_with_data.chart.get_data_mut().0
     }
     fn axis_data_mut(&mut self) -> &mut AxisData {

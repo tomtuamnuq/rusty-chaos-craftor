@@ -97,7 +97,7 @@ impl PlotDimensions {
 }
 
 type StyledSeries<P, C> = (Vec<Option<P>>, Vec<Style<C>>);
-pub struct PlotBackend<P, C> {
+pub struct PlotData<P, C> {
     point_holder: PlotSeriesHolder<StyledSeries<P, C>>,
     extrema_holder: PlotSeriesHolder<(P, P)>,
     series_colorer: SeriesColorer,
@@ -106,7 +106,7 @@ pub struct PlotBackend<P, C> {
     selection_series_color: SeriesColorChoice,
 }
 
-impl<P, C> PartialEq for PlotBackend<P, C> {
+impl<P, C> PartialEq for PlotData<P, C> {
     fn eq(&self, other: &Self) -> bool {
         // only compare options for reset
         self.series_colorer == other.series_colorer
@@ -116,7 +116,7 @@ impl<P, C> PartialEq for PlotBackend<P, C> {
     }
 }
 
-impl<P, C: FromRGB> Default for PlotBackend<P, C> {
+impl<P, C: FromRGB> Default for PlotData<P, C> {
     fn default() -> Self {
         Self {
             point_holder: Default::default(),
@@ -129,7 +129,7 @@ impl<P, C: FromRGB> Default for PlotBackend<P, C> {
     }
 }
 
-impl<P, C> PlotBackend<P, C> {
+impl<P, C> PlotData<P, C> {
     pub fn projection_color(&self) -> StateProjection {
         self.projection_color
     }
@@ -206,7 +206,7 @@ fn generic_flattened_states<'a, V>(
         .collect();
     (flattened_valid_states, num_valid_states_per_param)
 }
-impl<P, C: FromRGB + Clone> PlotBackend<P, C> {
+impl<P, C: FromRGB + Clone> PlotData<P, C> {
     delegate! {
         to self.series_colorer{
             pub fn special_color(&self) -> C;
@@ -275,38 +275,38 @@ mod tests {
         let chaos_data_1: ChaosData<State2> = ChaosData::new(num_samples, &init_distr_1);
         let chaos_data_2: ChaosData<State2> = ChaosData::new(num_samples, &init_distr_2);
         let chaos_data_vec = vec![&chaos_data_1, &chaos_data_2];
-        let mut plot_backend: PlotBackend<(ChaosFloat, ChaosFloat), RGB> = Default::default();
-        plot_backend.set_colormap(SeriesColors::BlackWhite);
-        *plot_backend.series_color_mut() = SeriesColorChoice::Same;
-        let styles_same = plot_backend.create_styles_for_chaos_data_generic(&chaos_data_vec);
+        let mut plot_data: PlotData<(ChaosFloat, ChaosFloat), RGB> = Default::default();
+        plot_data.set_colormap(SeriesColors::BlackWhite);
+        *plot_data.series_color_mut() = SeriesColorChoice::Same;
+        let styles_same = plot_data.create_styles_for_chaos_data_generic(&chaos_data_vec);
         assert_eq!(
             styles_same[1], styles_same[2],
             "Styles must have the same color and default values!"
         );
-        *plot_backend.series_color_mut() = SeriesColorChoice::PerPoint;
-        let styles_point = plot_backend.create_styles_for_chaos_data_generic(&chaos_data_vec);
+        *plot_data.series_color_mut() = SeriesColorChoice::PerPoint;
+        let styles_point = plot_data.create_styles_for_chaos_data_generic(&chaos_data_vec);
         assert_eq!(styles_point[0], styles_point[2], "Styles must have same value when they represent the same initial state for two parameter configurations!");
         assert_eq!(styles_point[1], styles_point[3], "Styles must have same value when they represent the same initial state for two parameter configurations");
         assert_ne!(
             styles_point[0], styles_point[1],
             "Styles must be different when represent different states!"
         );
-        *plot_backend.series_color_mut() = SeriesColorChoice::PerSeries;
-        let styles_series = plot_backend.create_styles_for_chaos_data_generic(&chaos_data_vec);
+        *plot_data.series_color_mut() = SeriesColorChoice::PerSeries;
+        let styles_series = plot_data.create_styles_for_chaos_data_generic(&chaos_data_vec);
         assert_eq!(
             styles_series[0], styles_series[1],
             "Styles must have same values since they were plotted in the same series(even though different parameter configurations)!"
         );
-        plot_backend.remove_parameter();
-        plot_backend.set_projection_color(StateProjection::S(0));
-        *plot_backend.series_color_mut() = SeriesColorChoice::StateProjection;
-        let styles_projection = plot_backend.create_styles_for_chaos_data_generic(&chaos_data_vec);
+        plot_data.remove_parameter();
+        plot_data.set_projection_color(StateProjection::S(0));
+        *plot_data.series_color_mut() = SeriesColorChoice::StateProjection;
+        let styles_projection = plot_data.create_styles_for_chaos_data_generic(&chaos_data_vec);
         assert_ne!(
             styles_projection[0], styles_projection[2],
             "Styles must be different when color represents the different state values!"
         );
-        plot_backend.set_parameter("t", vec![-1.0, 1.0]);
-        let styles_projection = plot_backend.create_styles_for_chaos_data_generic(&chaos_data_vec);
+        plot_data.set_parameter("t", vec![-1.0, 1.0]);
+        let styles_projection = plot_data.create_styles_for_chaos_data_generic(&chaos_data_vec);
         assert_eq!(
             styles_projection[0], styles_projection[1],
             "Styles must be equal when color represents the same parameter value!"

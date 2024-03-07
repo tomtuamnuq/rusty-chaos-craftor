@@ -33,8 +33,8 @@ pub const TIP_PARTICLE_MODE: &str = "Choose between a 2D or 3D particle simulati
 pub const TIP_FRACTAL_MODE: &str =
     "Choose between 2D rings (Complex, Dual, Perplex) or 4D Quaternions.";
 
-pub const LABEL_PLOT_BACKEND: &str = "Plot Backend";
-pub const TIP_PLOT_BACKEND: &str = "Select the plotting backend to use. Egui has a 2D backend for plots. 3D plots are available through Plotters and the egui_plotters crate.";
+pub const LABEL_PLOT_BACKEND: &str = "Plot Dim";
+pub const TIP_PLOT_BACKEND: &str = "Select the plotting backend to use. The egui_plot crate provides a 2D plot. 3D plots are available through Plotters and the egui_plotters crate.";
 
 pub const LABEL_NUM_FRAMES: &str = "Frame Rate";
 pub const TIP_NUM_FRAMES: &str = "Set the number of frames per second.";
