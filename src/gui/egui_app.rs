@@ -14,13 +14,13 @@ use egui::{
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Deserialize, Serialize)]
+#[serde(default)]
 pub struct ChaosApp {
-    #[serde(skip)] // start with initial panel since chaotic function is not set
+    #[serde(skip)] // open initial panel to save latest chosen function (which is not set)
     open_conf_panel: ConfPanel,
     initial_panel: InitialPanel,
     execute_panel: ExecutionPanel,
     plot_panel: PlotPanel,
-    #[serde(skip)] // benchmark must be reinitiated manually
     benchmark_panel: BenchmarkPanel,
     open_main_panel: MainPanel,
     #[serde(skip)] // avoid saving ChaosData arrays
@@ -280,7 +280,11 @@ impl eframe::App for ChaosApp {
     }
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         let mut mouse_over_main_panel = true;
-        conf_window("Configuration", ctx, Align2::LEFT_TOP).show(ctx, |ui| {
+        let conf_align = match self.open_main_panel {
+            MainPanel::ChaoticPlot => Align2::LEFT_TOP,
+            MainPanel::Benchmark => Align2::CENTER_TOP,
+        };
+        conf_window("Configuration", ctx, conf_align).show(ctx, |ui| {
             let response = ui
                 .vertical(|ui| {
                     self.add_general_conf(ui);

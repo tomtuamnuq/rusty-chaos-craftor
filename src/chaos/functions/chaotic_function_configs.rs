@@ -9,6 +9,7 @@ macro_rules! generate_chaotic_function_configs {
     ($($variant:ident $par_check_code:ident{ $($field:ident: ($field_min:expr, $field_max:expr)),* } ),*)=> {
         $(
             #[derive(PartialEq, Clone, Debug, Deserialize, Serialize)]
+            #[serde(default)]
             pub struct $variant {
                 $(pub $field: ChaosFloat,)*
             }

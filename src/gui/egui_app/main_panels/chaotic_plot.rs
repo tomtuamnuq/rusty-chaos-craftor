@@ -7,6 +7,7 @@ use egui::Ui;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
+#[serde(default)]
 pub struct PlotPanel {
     #[serde(skip)] // start without generating data immediately
     pub generate_new_data: bool,

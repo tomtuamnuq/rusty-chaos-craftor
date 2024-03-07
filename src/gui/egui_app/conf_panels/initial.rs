@@ -73,6 +73,7 @@ enum InitialMode {
 }
 
 #[derive(PartialEq, Deserialize, Serialize)]
+#[serde(default)]
 struct InitialStateData {
     open_initial_distributions: [InitialDistributionViewSelection; MAX_NUM_STATE_DIMS],
     all_initital_distributions: [InitialDistributionViewData; MAX_NUM_STATE_DIMS],
@@ -134,6 +135,7 @@ impl InitialStateData {
 }
 
 #[derive(PartialEq, Deserialize, Serialize)]
+#[serde(default)]
 struct InitialParticleData {
     open_initial_distributions_xy: [InitialDistributionViewSelection; DIMS_INIT_PARTICLEXY],
 
@@ -397,6 +399,7 @@ impl ParticleMode {
 }
 
 #[derive(PartialEq, Deserialize, Serialize)]
+#[serde(default)]
 struct InitialFractalData {
     open_initial_distributions_complex:
         [InitialDistributionViewSelection; DIMS_INIT_FRACTALCOMPLEX],
@@ -676,6 +679,7 @@ const DISTRIBUTIONS_NO_MESH: [InitialDistributionGroup; 2] = [
 ];
 
 #[derive(PartialEq, Default, Copy, Clone, Deserialize, Serialize)]
+#[serde(default)]
 struct InitialDistributionViewSelection {
     pub view: InitialDistributionView,
     pub group: InitialDistributionGroup,
@@ -693,6 +697,7 @@ impl InitialDistributionViewSelection {
     }
 }
 #[derive(PartialEq, Deserialize, Serialize)]
+#[serde(default)]
 pub struct InitialPanel {
     num_samples: usize,
     init_mode: InitialMode,

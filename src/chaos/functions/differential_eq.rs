@@ -47,7 +47,9 @@ where
     iterators: Vec<IntoIter<V>>,
 }
 
-impl<V: ValidStateCheck, T: Clone + System<Time, V> + Integrator<Input = V, Output = V>> OdeSolver<V, T> {
+impl<V: ValidStateCheck, T: Clone + System<Time, V> + Integrator<Input = V, Output = V>>
+    OdeSolver<V, T>
+{
     pub fn new(system: T) -> Self {
         Self {
             system,
@@ -93,8 +95,8 @@ impl<V: ValidStateCheck, T: Clone + System<Time, V> + Integrator<Input = V, Outp
     }
 }
 
-impl<V: ValidStateCheck, T: Clone + System<Time, V> + Integrator<Input = V, Output = V>> OdeSolverTrait
-    for OdeSolver<V, T>
+impl<V: ValidStateCheck, T: Clone + System<Time, V> + Integrator<Input = V, Output = V>>
+    OdeSolverTrait for OdeSolver<V, T>
 {
     type State = V;
     fn execute(&mut self, states: &mut [Option<V>], num_executions: usize) {

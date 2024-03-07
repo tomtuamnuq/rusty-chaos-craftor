@@ -3,10 +3,16 @@ use crate::gui::tooltips::*;
 use crate::gui::*;
 use egui::Ui;
 use egui_plot::{HLine, Plot, PlotPoint, PlotPoints, Points, VLine};
+use serde::{Deserialize, Serialize};
 
+#[derive(Deserialize, Serialize)]
+#[serde(default)]
 pub struct BenchmarkPanel {
+    #[serde(skip)] // start without running benchmark
     run_benchmark: bool,
+    #[serde(skip)] // benchmark must be reinitiated manually
     benchmark_result: ChaosBenchmarkResult,
+    #[serde(skip)] // benchmark must be reinitiated manually
     bench_config: ChaosInitSchema,
     use_warmup: bool,
     num_iterations: usize,
@@ -135,9 +141,18 @@ impl BenchmarkPanel {
                     let warmup_tag = if i < num_warmups { "!" } else { "" };
                     match res {
                         Ok(run) => {
-                            let runtime = run.runtime_millis();
+                            let (runtime, label) = {
+                                let runtime = run.runtime_millis();
+                                if runtime < 10 {
+                                    (run.runtime_nanos() as usize, "ns")
+                                } else {
+                                    (runtime, "ms")
+                                }
+                            };
                             let num_states = run.num_valid_end_states();
-                            format!("{i} {warmup_tag} States: {num_states} Runtime: {runtime} ms")
+                            format!(
+                                "{i} {warmup_tag} States: {num_states} Runtime: {runtime} {label}"
+                            )
                         }
                         Err(e) => format!("{i} {warmup_tag} Error: {e}"),
                     }
@@ -169,7 +184,8 @@ impl BenchmarkPanel {
             };
             group_horizontal(ui, |ui| {
                 ui.label(format!(
-                    "Mean: {runtime_mean} ns   Valid warmups: {num_valid_warmups}"
+                    "Mean: {:.2} ns Valid warmups: {}",
+                    runtime_mean, num_valid_warmups
                 ));
             });
             let plot = Plot::new("bench_plot")
@@ -192,26 +208,5 @@ impl BenchmarkPanel {
     pub fn ui(&mut self, ui: &mut Ui) {
         self.show_summary(ui);
         self.show_results(ui);
-        powered_by_egui_and_eframe(ui);
     }
-}
-fn powered_by_egui_and_eframe(ui: &mut egui::Ui) {
-    ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-        ui.add(egui::github_link_file!(
-            "https://github.com/tomtuamnuq/egui-chaos/blob/master/",
-            "Source code."
-        ));
-        ui.horizontal(|ui| {
-            ui.spacing_mut().item_spacing.x = 0.0;
-            ui.label("Powered by ");
-            ui.hyperlink_to("egui", "https://github.com/emilk/egui");
-            ui.label(" and ");
-            ui.hyperlink_to(
-                "eframe",
-                "https://github.com/emilk/egui/tree/master/crates/eframe",
-            );
-            ui.label(".");
-        });
-        egui::warn_if_debug_build(ui);
-    });
 }

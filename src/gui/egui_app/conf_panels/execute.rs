@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 
 #[derive(PartialEq, Deserialize, Serialize)]
+#[serde(default)]
 pub struct ExecutionPanel {
     num_executions: usize,
     chaotic_discrete_map: Option<DiscreteMapView>,

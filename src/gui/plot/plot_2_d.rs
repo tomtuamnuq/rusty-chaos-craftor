@@ -21,6 +21,7 @@ impl FromRGB for Color32 {
 }
 
 #[derive(Deserialize, Serialize)]
+#[serde(default)]
 pub struct Plot2D {
     #[serde(skip)] // avoid saving points
     plot_backend: PlotBackend<Point2D, Color32>,
@@ -440,6 +441,8 @@ impl Plot2D {
                 .response;
             // ctx.layer_painter(layer_id).extend(shapes); // avoids the clipping so that points overlay the options etc.
             ui.painter().with_clip_rect(rect).extend(shapes);
+        } else {
+            powered_by_egui_and_eframe(ui);
         }
     }
 
@@ -501,4 +504,25 @@ impl Plot2D {
             pub fn set_point_colormap(&mut self, colormap: SeriesColors);
         }
     }
+}
+
+fn powered_by_egui_and_eframe(ui: &mut egui::Ui) {
+    ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
+        ui.add(egui::github_link_file!(
+            "https://github.com/tomtuamnuq/rusty-chaos-craftor",
+            "Source code."
+        ));
+        ui.horizontal(|ui| {
+            ui.spacing_mut().item_spacing.x = 0.0;
+            ui.label("Powered by ");
+            ui.hyperlink_to("egui", "https://github.com/emilk/egui");
+            ui.label(" and ");
+            ui.hyperlink_to(
+                "eframe",
+                "https://github.com/emilk/egui/tree/master/crates/eframe",
+            );
+            ui.label(".");
+        });
+        egui::warn_if_debug_build(ui);
+    });
 }

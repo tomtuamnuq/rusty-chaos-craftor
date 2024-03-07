@@ -18,6 +18,7 @@ impl Default for Trigger {
 }
 /// A simple timer for managing time intervals and execution timing.
 #[derive(PartialEq, Eq, Deserialize, Serialize)]
+#[serde(default)]
 pub struct Timer {
     interval: Duration,
     #[serde(skip)] // always start with a fresh instant

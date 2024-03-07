@@ -36,6 +36,7 @@ impl Default for AxisData {
     }
 }
 #[derive(Clone, Copy, Deserialize, Serialize)]
+#[serde(default)]
 struct Options3D {
     pub point_size: f64,
     pub point_opacity: f64,
@@ -259,6 +260,7 @@ impl Default for Chart3DWithData {
 }
 
 #[derive(Default, Deserialize, Serialize)]
+#[serde(default)]
 pub struct Plot3D {
     #[serde(skip)]
     chart_with_data: Chart3DWithData,

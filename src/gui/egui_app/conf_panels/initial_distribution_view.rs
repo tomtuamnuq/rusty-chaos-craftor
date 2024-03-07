@@ -33,6 +33,7 @@ macro_rules! generate_initial_distribution_views {
                 )*
             }
             #[derive(PartialEq, Default, Deserialize, Serialize)]
+            #[serde(default)]
             pub struct InitialDistributionViewData {
                 $(
                     pub [<$variant:lower>]: [<$variant View>],

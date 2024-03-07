@@ -115,7 +115,7 @@ pub const TIP_FRACTAL_QUATERNION_I: &str = "The i-component 'b' of the quaternio
 pub const TIP_FRACTAL_QUATERNION_J: &str = "The j-component 'c' of the quaternion z = a + b i + c j + d k, defining the z-value of the pixel and the j-component of z0.";
 pub const TIP_FRACTAL_QUATERNION_K: &str = "The k-component 'd' of the quaternion z = a + b i + c j + d k, usually fixed to visualize the dimensions a, b, and c.";
 
-pub const LABEL_WARMUP: &str = "Warm-Up Usage";
+pub const LABEL_WARMUP: &str = "Warm-Up";
 pub const TIP_WARMUP: &str = "Choose whether to run the chaotic function several times before measurement for benchmarking purposes.";
 pub const LABEL_NUM_WARMUPS: &str = "Number of Warm-Ups";
 pub const TIP_NUM_WARMUPS: &str =
