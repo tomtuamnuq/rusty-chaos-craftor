@@ -1,10 +1,28 @@
+use serde::{Deserialize, Serialize};
 use web_time::{Duration, Instant};
-
+#[derive(PartialEq, Eq, Clone, Copy)]
+struct Trigger {
+    pub time: Instant,
+}
+impl Trigger {
+    fn now() -> Self {
+        Self {
+            time: Instant::now(),
+        }
+    }
+}
+impl Default for Trigger {
+    fn default() -> Self {
+        Self::now()
+    }
+}
 /// A simple timer for managing time intervals and execution timing.
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Deserialize, Serialize)]
+#[serde(default)]
 pub struct Timer {
     interval: Duration,
-    last_triggered: Instant,
+    #[serde(skip)] // always start with a fresh instant
+    last_triggered: Trigger,
 }
 
 impl Timer {
@@ -16,7 +34,7 @@ impl Timer {
     pub fn new(seconds: usize) -> Self {
         Self {
             interval: Duration::from_secs(seconds.try_into().unwrap()),
-            last_triggered: Instant::now(),
+            last_triggered: Trigger::now(),
         }
     }
 
@@ -47,8 +65,8 @@ impl Timer {
     /// Returns `true` if the interval has elapsed and `false` otherwise.
     pub fn check_elapsed(&mut self) -> bool {
         let now = Instant::now();
-        if now.duration_since(self.last_triggered) >= self.interval {
-            self.last_triggered = now;
+        if now.duration_since(self.last_triggered.time) >= self.interval {
+            self.last_triggered.time = now;
             return true;
         }
         false

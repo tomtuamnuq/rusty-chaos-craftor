@@ -2,9 +2,10 @@ use crate::chaos::data::*;
 
 use plotters::style::colors::colormaps::*;
 use plotters::style::{Color, HSLColor, RGBColor};
+use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
-use super::plot_backend::DEFAULT_MAX_SERIES;
+use super::plot_data::DEFAULT_MAX_SERIES;
 #[allow(clippy::upper_case_acronyms)]
 pub type RGB = (u8, u8, u8);
 pub trait FromRGB {
@@ -17,7 +18,7 @@ impl FromRGB for RGB {
     }
 }
 
-#[derive(PartialEq, Eq, Default, Clone, Copy, EnumIter)]
+#[derive(PartialEq, Eq, Debug, Default, Clone, Copy, EnumIter, Deserialize, Serialize)]
 pub enum SeriesColors {
     BlackWhite,
     Bone,
@@ -105,7 +106,7 @@ impl SeriesColors {
     }
 }
 
-#[derive(PartialEq, Eq, Default, Clone, Copy, EnumIter)]
+#[derive(PartialEq, Eq, Debug, Default, Clone, Copy, EnumIter)]
 pub enum SeriesColorChoice {
     Same,
     #[default]
@@ -123,7 +124,7 @@ impl From<SeriesColorChoice> for &'static str {
         }
     }
 }
-
+#[derive(Debug, PartialEq, Eq)]
 pub struct SeriesColorer {
     colormap: SeriesColors,
     color_counter: usize,

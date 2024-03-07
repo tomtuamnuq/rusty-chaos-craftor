@@ -1,14 +1,14 @@
-use crate::chaos::data::*;
-use egui::Ui;
-use strum_macros::{EnumIter, IntoStaticStr};
-
 use super::initial_distribution_view::{
     InitialDistributionView, InitialDistributionViewData, INITIAL_DETERMINISTIC, INITIAL_MESHES,
     INITIAL_PROBABILISTIC,
 };
+use crate::chaos::data::*;
+use crate::chaos::labels::*;
 use crate::gui::tooltips::*;
 use crate::gui::*;
-use crate::chaos::labels::*;
+use egui::Ui;
+use serde::{Deserialize, Serialize};
+use strum_macros::{EnumIter, IntoStaticStr};
 
 const MAX_NUM_STATE_DIMS: usize = 4;
 
@@ -64,23 +64,17 @@ fn distribution_selection(
     });
 }
 
-#[derive(PartialEq, Clone, Copy, Default, EnumIter, IntoStaticStr)]
+#[derive(PartialEq, Clone, Copy, Default, EnumIter, IntoStaticStr, Deserialize, Serialize)]
 enum InitialMode {
     #[default]
     States,
     Particle,
     Fractals,
 }
-#[derive(PartialEq, Default)]
-struct InitialModeData {
-    pub states: InitialStateData,
-    pub particles: InitialParticleData,
-    pub fractals: InitialFractalData,
-}
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Deserialize, Serialize)]
+#[serde(default)]
 struct InitialStateData {
-    pub num_state_dims: usize,
     open_initial_distributions: [InitialDistributionViewSelection; MAX_NUM_STATE_DIMS],
     all_initital_distributions: [InitialDistributionViewData; MAX_NUM_STATE_DIMS],
 }
@@ -99,7 +93,6 @@ impl Default for InitialStateData {
         let initial_distributions: [InitialDistributionViewData; MAX_NUM_STATE_DIMS] =
             std::array::from_fn(|_| InitialDistributionViewData::default());
         Self {
-            num_state_dims: 2,
             open_initial_distributions: open,
             all_initital_distributions: initial_distributions,
         }
@@ -107,41 +100,12 @@ impl Default for InitialStateData {
 }
 
 impl InitialStateData {
-    fn num_states_selection_ui(&mut self, ui: &mut Ui) {
-        let minus_button_activated = self.num_state_dims > 1;
-        if clickable_button(
-            "-",
-            false,
-            minus_button_activated,
-            ui,
-            TIP_BUTTON_DECREASE_NUM_STATES,
-        ) {
-            self.num_state_dims -= 1;
-        }
-        add_label(
-            format!("Dims: {}", self.num_state_dims).as_str(),
-            ui,
-            TIP_DIMS,
-        );
-        let plus_button_activated = self.num_state_dims < MAX_NUM_STATE_DIMS;
-        if clickable_button(
-            "+",
-            false,
-            plus_button_activated,
-            ui,
-            TIP_BUTTON_INCREASE_NUM_STATES,
-        ) {
-            self.num_state_dims += 1;
-        }
+    fn open_selections(&self, num_state_dims: usize) -> &[InitialDistributionViewSelection] {
+        self.open_initial_distributions.split_at(num_state_dims).0
     }
-    fn open_selections(&self) -> &[InitialDistributionViewSelection] {
-        self.open_initial_distributions
-            .split_at(self.num_state_dims)
-            .0
-    }
-    fn initial_distributions(&self) -> InitialDistributionConfig {
+    fn initial_distributions(&self, num_state_dims: usize) -> InitialDistributionConfig {
         InitialDistributionConfig::States(
-            (0..self.num_state_dims)
+            (0..num_state_dims)
                 .map(|i| {
                     generate_initital_distribution_variant(
                         &self.open_initial_distributions,
@@ -152,8 +116,8 @@ impl InitialStateData {
                 .collect(),
         )
     }
-    fn selection_ui(&mut self, ui: &mut Ui) {
-        for i in 0..self.num_state_dims {
+    fn selection_ui(&mut self, num_state_dims: usize, ui: &mut Ui) {
+        for i in 0..num_state_dims {
             let label = format!("S{}", i + 1);
             let tooltip = format!(" Select initital distribution for state {} ", i + 1);
             let open = &mut self.open_initial_distributions[i];
@@ -170,11 +134,15 @@ impl InitialStateData {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Deserialize, Serialize)]
+#[serde(default)]
 struct InitialParticleData {
     open_initial_distributions_xy: [InitialDistributionViewSelection; DIMS_INIT_PARTICLEXY],
+
     all_initital_distributions_xy: [InitialDistributionViewData; DIMS_INIT_PARTICLEXY],
+
     open_initial_distributions_xyz: [InitialDistributionViewSelection; DIMS_INIT_PARTICLEXYZ],
+
     all_initital_distributions_xyz: [InitialDistributionViewData; DIMS_INIT_PARTICLEXYZ],
 }
 
@@ -349,7 +317,7 @@ impl InitialParticleData {
 }
 
 #[allow(clippy::upper_case_acronyms)]
-#[derive(PartialEq, Clone, Copy, Default, EnumIter, IntoStaticStr)]
+#[derive(PartialEq, Clone, Copy, Default, EnumIter, IntoStaticStr, Deserialize, Serialize)]
 enum ParticleMode {
     #[default]
     XY,
@@ -382,7 +350,6 @@ impl ParticleMode {
     const PARTICLE_3D_MESHABLE: [bool; DIMS_INIT_PARTICLEXYZ] =
         [false, false, false, true, true, true, false, false, false];
     const PARTICLE_2D_TOOLTIPS: [&'static str; DIMS_INIT_PARTICLEXY] = [
-        // TODO also describe how particles are drawn!
         TIP_PARTICLE_PARITY,
         TIP_PARTICLE_CHARGE,
         TIP_PARTICLE_MASS,
@@ -431,18 +398,26 @@ impl ParticleMode {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Deserialize, Serialize)]
+#[serde(default)]
 struct InitialFractalData {
     open_initial_distributions_complex:
         [InitialDistributionViewSelection; DIMS_INIT_FRACTALCOMPLEX],
+
     all_initital_distributions_complex: [InitialDistributionViewData; DIMS_INIT_FRACTALCOMPLEX],
+
     open_initial_distributions_dual: [InitialDistributionViewSelection; DIMS_INIT_FRACTALDUAL],
+
     all_initital_distributions_dual: [InitialDistributionViewData; DIMS_INIT_FRACTALDUAL],
+
     open_initial_distributions_perplex:
         [InitialDistributionViewSelection; DIMS_INIT_FRACTALPERPLEX],
+
     all_initital_distributions_perplex: [InitialDistributionViewData; DIMS_INIT_FRACTALPERPLEX],
+
     open_initial_distributions_quaternion:
         [InitialDistributionViewSelection; DIMS_INIT_FRACTALQUATERNION],
+
     all_initital_distributions_quaternion:
         [InitialDistributionViewData; DIMS_INIT_FRACTALQUATERNION],
 }
@@ -608,7 +583,7 @@ impl InitialFractalData {
     }
 }
 
-#[derive(PartialEq, Clone, Copy, Default, EnumIter, IntoStaticStr)]
+#[derive(PartialEq, Clone, Copy, Default, EnumIter, IntoStaticStr, Deserialize, Serialize)]
 enum FractalMode {
     #[default]
     Complex,
@@ -684,12 +659,22 @@ impl FractalMode {
     }
 }
 
-#[derive(PartialEq, Copy, Clone, Default, EnumIter, IntoStaticStr)]
+#[derive(PartialEq, Copy, Clone, Default, EnumIter, Deserialize, Serialize)]
 enum InitialDistributionGroup {
     #[default]
     Probabilistic,
     Mesh,
     Deterministic,
+}
+
+impl From<InitialDistributionGroup> for &'static str {
+    fn from(val: InitialDistributionGroup) -> Self {
+        match val {
+            InitialDistributionGroup::Probabilistic => "🎲",
+            InitialDistributionGroup::Deterministic => "🎯",
+            InitialDistributionGroup::Mesh => "▦",
+        }
+    }
 }
 
 const DISTRIBUTIONS_ALL: [InitialDistributionGroup; 3] = [
@@ -703,7 +688,8 @@ const DISTRIBUTIONS_NO_MESH: [InitialDistributionGroup; 2] = [
     InitialDistributionGroup::Deterministic,
 ];
 
-#[derive(PartialEq, Default, Copy, Clone)]
+#[derive(PartialEq, Default, Copy, Clone, Deserialize, Serialize)]
+#[serde(default)]
 struct InitialDistributionViewSelection {
     pub view: InitialDistributionView,
     pub group: InitialDistributionGroup,
@@ -720,23 +706,32 @@ impl InitialDistributionViewSelection {
         &mut self.group
     }
 }
-
-#[derive(PartialEq)]
+#[derive(PartialEq, Deserialize, Serialize)]
+#[serde(default)]
 pub struct InitialPanel {
     num_samples: usize,
     init_mode: InitialMode,
+    num_state_dims: usize,
     particle_mode: ParticleMode,
     fractal_mode: FractalMode,
-    initial_mode_data: InitialModeData,
+    #[cfg_attr(target_arch = "wasm32", serde(skip))] // TODO causes wasm memory bug, works native
+    states: InitialStateData,
+    #[cfg_attr(target_arch = "wasm32", serde(skip))] // TODO causes wasm memory bug, works native
+    particles: InitialParticleData,
+    #[cfg_attr(target_arch = "wasm32", serde(skip))] // TODO causes wasm memory bug, works native
+    fractals: InitialFractalData,
 }
 impl Default for InitialPanel {
     fn default() -> Self {
         Self {
-            num_samples: 10,
+            num_samples: 100,
             init_mode: Default::default(),
+            num_state_dims: 2,
             particle_mode: Default::default(),
             fractal_mode: Default::default(),
-            initial_mode_data: Default::default(),
+            states: Default::default(),
+            particles: Default::default(),
+            fractals: Default::default(),
         }
     }
 }
@@ -748,33 +743,21 @@ impl InitialPanel {
 
     pub fn initial_distributions(&self) -> InitialDistributionConfig {
         match self.init_mode {
-            InitialMode::States => self.initial_mode_data.states.initial_distributions(),
-            InitialMode::Particle => self
-                .initial_mode_data
-                .particles
-                .initial_distributions(self.particle_mode),
-            InitialMode::Fractals => self
-                .initial_mode_data
-                .fractals
-                .initial_distributions(self.fractal_mode),
+            InitialMode::States => self.states.initial_distributions(self.num_state_dims()),
+            InitialMode::Particle => self.particles.initial_distributions(self.particle_mode),
+            InitialMode::Fractals => self.fractals.initial_distributions(self.fractal_mode),
         }
     }
 
     fn num_state_dims(&self) -> usize {
-        self.initial_mode_data.states.num_state_dims
+        self.num_state_dims
     }
 
     fn count_open_meshes(&self) -> usize {
         let open_selections: &[InitialDistributionViewSelection] = match self.init_mode {
-            InitialMode::States => self.initial_mode_data.states.open_selections(),
-            InitialMode::Particle => self
-                .initial_mode_data
-                .particles
-                .open_selections(self.particle_mode),
-            InitialMode::Fractals => self
-                .initial_mode_data
-                .fractals
-                .open_selections(self.fractal_mode),
+            InitialMode::States => self.states.open_selections(self.num_state_dims()),
+            InitialMode::Particle => self.particles.open_selections(self.particle_mode),
+            InitialMode::Fractals => self.fractals.open_selections(self.fractal_mode),
         };
         let mut ct = 0;
         for open in open_selections {
@@ -811,9 +794,39 @@ impl InitialPanel {
         }
     }
 
+    fn num_states_selection_ui(&mut self, ui: &mut Ui) {
+        let minus_button_activated = self.num_state_dims > 1;
+        if clickable_button(
+            "-",
+            false,
+            minus_button_activated,
+            ui,
+            TIP_BUTTON_DECREASE_NUM_STATES,
+        ) {
+            self.num_state_dims -= 1;
+        }
+        add_label(
+            format!("Dims: {}", self.num_state_dims).as_str(),
+            ui,
+            TIP_DIMS,
+        );
+        let plus_button_activated = self.num_state_dims < MAX_NUM_STATE_DIMS;
+        if clickable_button(
+            "+",
+            false,
+            plus_button_activated,
+            ui,
+            TIP_BUTTON_INCREASE_NUM_STATES,
+        ) {
+            self.num_state_dims += 1;
+        }
+    }
+
     pub fn ui(&mut self, ui: &mut Ui) {
         group_horizontal(ui, |ui| {
             let _ = combo_box(LABEL_INIT_MODE, &mut self.init_mode, ui, TIP_INIT_MODE);
+        });
+        group_horizontal(ui, |ui| {
             let max_num_samples = self.max_num_samples();
             integer_slider(
                 LABEL_NUM_SAMPLES,
@@ -827,7 +840,7 @@ impl InitialPanel {
         match self.init_mode {
             InitialMode::States => {
                 group_horizontal(ui, |ui| {
-                    self.initial_mode_data.states.num_states_selection_ui(ui);
+                    self.num_states_selection_ui(ui);
                 });
                 self.states_selection_ui(ui);
             }
@@ -849,7 +862,7 @@ impl InitialPanel {
     fn states_selection_ui(&mut self, ui: &mut Ui) {
         egui::ScrollArea::horizontal().show(ui, |ui| {
             ui.vertical(|ui| {
-                self.initial_mode_data.states.selection_ui(ui);
+                self.states.selection_ui(self.num_state_dims(), ui);
             });
         });
     }
@@ -857,9 +870,7 @@ impl InitialPanel {
     fn particle_selection_ui(&mut self, ui: &mut Ui) {
         egui::ScrollArea::both().show(ui, |ui| {
             ui.vertical(|ui| {
-                self.initial_mode_data
-                    .particles
-                    .selection_ui(self.particle_mode, ui);
+                self.particles.selection_ui(self.particle_mode, ui);
             });
         });
     }
@@ -875,9 +886,7 @@ impl InitialPanel {
         });
         egui::ScrollArea::horizontal().show(ui, |ui| {
             ui.vertical(|ui| {
-                self.initial_mode_data
-                    .fractals
-                    .selection_ui(self.fractal_mode, ui);
+                self.fractals.selection_ui(self.fractal_mode, ui);
             });
         });
     }

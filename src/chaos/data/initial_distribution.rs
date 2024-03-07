@@ -291,6 +291,7 @@ macro_rules! generate_initial_distribution_variants {
 
         $(
             #[derive(PartialEq, Clone, Copy, Serialize, Deserialize)]
+            #[serde(default)]
             pub struct $variant {
                 $(pub $field: ChaosFloat,)*
             }
@@ -680,6 +681,7 @@ impl ChaosDescription for Logspace {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::chaos::functions::*;

@@ -1,20 +1,26 @@
 use crate::{
-    gui::{add_hyperlink, integer_slider, tooltips::*},
     chaos::data::{DistributionDimensions, FractalDimensions},
     chaos::{DiscreteMapVec, OdeSystemSolverVec},
+    gui::{add_hyperlink, integer_slider, tooltips::*},
 };
 
 use super::execute_chaotic_function_view::{
     ChaosFunctionViewData, DifferentialSystemView, DiscreteMapView,
 };
+
 use egui::{ScrollArea, Ui};
+use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
-#[derive(PartialEq)]
+
+#[derive(PartialEq, Deserialize, Serialize)]
+#[serde(default)]
 pub struct ExecutionPanel {
     num_executions: usize,
     chaotic_discrete_map: Option<DiscreteMapView>,
     chaotic_diff_system: Option<DifferentialSystemView>,
+    #[cfg_attr(target_arch = "wasm32", serde(skip))] // TODO causes wasm memory bug, works native
     view_data: ChaosFunctionViewData,
+    #[serde(skip)] // start without an initialized function
     pub selected_function_was_set: bool,
 }
 
@@ -189,14 +195,15 @@ impl ExecutionPanel {
     pub fn ui(&mut self, ui: &mut Ui, dims: DistributionDimensions, num_execution_limit: usize) {
         self.check_compatible_chaotic_function(&dims);
         ui.vertical(|ui| {
-            ScrollArea::vertical().show(ui, |ui| {
             match dims {
                 DistributionDimensions::State(_) => {
-                        ui.horizontal(|ui| {
+                    ui.horizontal(|ui| {
+                        ScrollArea::vertical().show(ui, |ui| {
                             self.discrete_map_listing(ui, &dims);
                             ui.separator();
                             self.diff_system_ui(ui, &dims);
-                        });
+                        }); // Scroll Area
+                    });
                 }
                 DistributionDimensions::Particle(n) => {
                     ui.heading(format!("{n}D Particles"));
@@ -204,23 +211,24 @@ impl ExecutionPanel {
                     self.particle_ui(ui, n);
                 }
                 DistributionDimensions::Fractal(ref fractal_ring) => {
-                        let ring_type: &'static str = fractal_ring.into();
-                        ui.horizontal(|ui| {
-                            ui.heading(format!("{ring_type} Fractals "));
-                            let (reference, tooltip) = match fractal_ring {
-                                FractalDimensions::Complex => (LINK_COMPLEX, TIP_COMPLEX),
-                                FractalDimensions::Dual => (LINK_DUAL, TIP_DUAL),
-                                FractalDimensions::Perplex => (LINK_PERPLEX, TIP_PERPLEX),
-                                FractalDimensions::Quaternion => (LINK_QUATERNION, TIP_QUATERNION),
-                            };
-                            add_hyperlink("Info", reference, ui, tooltip);
-                        });
-                        ui.horizontal(|ui| {
+                    let ring_type: &'static str = fractal_ring.into();
+                    ui.horizontal(|ui| {
+                        ui.heading(format!("{ring_type} Fractals "));
+                        let (reference, tooltip) = match fractal_ring {
+                            FractalDimensions::Complex => (LINK_COMPLEX, TIP_COMPLEX),
+                            FractalDimensions::Dual => (LINK_DUAL, TIP_DUAL),
+                            FractalDimensions::Perplex => (LINK_PERPLEX, TIP_PERPLEX),
+                            FractalDimensions::Quaternion => (LINK_QUATERNION, TIP_QUATERNION),
+                        };
+                        add_hyperlink("Info", reference, ui, tooltip);
+                    });
+                    ui.horizontal(|ui| {
+                        ScrollArea::vertical().show(ui, |ui| {
                             self.fractal_ui(ui, &dims);
-                        });
+                        }); // Scroll Area
+                    });
                 }
             };
-            });
         });
         ScrollArea::both().show(ui, |ui| {
             if let Some(open) = &self.chaotic_discrete_map {

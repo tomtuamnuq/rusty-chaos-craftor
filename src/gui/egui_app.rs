@@ -4,21 +4,43 @@ mod main_panels;
 use self::conf_panels::*;
 pub use self::egui_utils::*;
 use self::main_panels::*;
-use crate::gui::tooltips::*;
 use crate::chaos::{benchmark::ChaosInitSchema, *};
+use crate::gui::tooltips::*;
 use anyhow::{bail, Error};
-use egui::{style::Interaction, Align2, Context, CursorIcon, FontFamily, FontId, TextStyle, Ui};
-#[derive(Default)]
+use egui::{
+    style::{Interaction, Visuals},
+    Align2, Context, CursorIcon, FontFamily, FontId, TextStyle, Ui,
+};
+use serde::{Deserialize, Serialize};
+
+#[derive(Default, Deserialize, Serialize)]
+#[serde(default)]
 pub struct ChaosApp {
+    #[serde(skip)] // open initial panel to save latest chosen function (which is not set)
     open_conf_panel: ConfPanel,
     initial_panel: InitialPanel,
     execute_panel: ExecutionPanel,
     plot_panel: PlotPanel,
     benchmark_panel: BenchmarkPanel,
     open_main_panel: MainPanel,
+    #[serde(skip)] // avoid saving ChaosData arrays
     chaos_controller: ChaosExecutionController,
+    #[serde(skip)] // start without initiating function
     init_chaotic_function: bool,
+    #[serde(skip)] // always start without executing
     executes: bool,
+}
+impl PartialEq for ChaosApp {
+    fn eq(&self, other: &Self) -> bool {
+        // only compare options for reset
+        self.open_conf_panel == other.open_conf_panel
+        && self.open_main_panel == other.open_main_panel
+        && self.executes == other.executes // most of the times this will end the comparison to default
+        && self.plot_panel == other.plot_panel
+        && self.initial_panel == other.initial_panel
+        && self.execute_panel == other.execute_panel
+        && self.benchmark_panel == other.benchmark_panel
+    }
 }
 
 impl ChaosApp {
@@ -47,11 +69,16 @@ impl ChaosApp {
                 // selectable_labels: false,
                 // multi_widget_text_select: false
             };
+            style.visuals = Visuals::dark();
             style.visuals.interact_cursor = Some(CursorIcon::PointingHand);
         }); // Disable feathering as it causes artifacts with Plotters backend
         ctx.tessellation_options_mut(|tess_options| {
             tess_options.feathering = false;
         });
+        // Load previous app state (if any).
+        if let Some(storage) = cc.storage {
+            return eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
+        }
         Self::default()
     }
 
@@ -173,7 +200,10 @@ impl ChaosApp {
                 }
             }
             egui::widgets::global_dark_light_mode_buttons(ui);
-            // egui::reset_button(ui, self); // TODO: derive PartialEq for ChaosApp
+            if clickable_button(LABEL_BUTTON_RESET, false, true, ui, TIP_BUTTON_RESET) {
+                // always enabled avoids comparing all initial distribution and chaotic function parameters
+                *self = Default::default();
+            }
         });
         group_horizontal(ui, |ui| {
             combo_box(
@@ -182,7 +212,11 @@ impl ChaosApp {
                 ui,
                 TIP_MAIN_MODE,
             );
-            add_checkbox(LABEL_RUN, &mut self.executes, ui, TIP_RUN);
+            let executes = self.executes;
+            let label_run = if executes { LABEL_PAUSE } else { LABEL_RUN };
+            if clickable_button(label_run, executes, true, ui, TIP_RUN) {
+                self.executes = !executes;
+            }
         });
         ui.vertical(|ui| {
             match self.open_main_panel {
@@ -259,9 +293,17 @@ impl ChaosApp {
 }
 
 impl eframe::App for ChaosApp {
+    /// Called by the frame work to save state before shutdown.
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        eframe::set_value(storage, eframe::APP_KEY, self);
+    }
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         let mut mouse_over_main_panel = true;
-        conf_window("Configuration", ctx, Align2::LEFT_TOP).show(ctx, |ui| {
+        let conf_align = match self.open_main_panel {
+            MainPanel::ChaoticPlot => Align2::LEFT_TOP,
+            MainPanel::Benchmark => Align2::CENTER_TOP,
+        };
+        conf_window("Configuration", conf_align).show(ctx, |ui| {
             let response = ui
                 .vertical(|ui| {
                     self.add_general_conf(ui);
@@ -271,7 +313,7 @@ impl eframe::App for ChaosApp {
                 mouse_over_main_panel = false;
             }
         });
-        conf_window("Chaos Creation", ctx, Align2::RIGHT_TOP).show(ctx, |ui| {
+        conf_window("Chaos Creation", Align2::RIGHT_TOP).show(ctx, |ui| {
             let response = ui
                 .vertical(|ui| {
                     self.add_chaos_conf(ui);

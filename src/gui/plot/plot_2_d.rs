@@ -1,15 +1,17 @@
-use crate::gui::{float_slider, group_horizontal, tooltips::*, PARAMETER_MAX, PARAMETER_MIN};
 use crate::chaos::data::*;
+use crate::gui::{float_slider, group_horizontal, tooltips::*, PARAMETER_MAX, PARAMETER_MIN};
 use delegate::delegate;
+
 use egui::Ui;
 use egui::{Color32, Shape, Stroke};
 use egui_plot::{format_number, log_grid_spacer, Plot, PlotPoint, PlotPoints, PlotUi, Points};
+use serde::{Deserialize, Serialize};
 
-use super::plot_backend::PlotBackend;
 use super::plot_colors::{FromRGB, SeriesColorChoice, SeriesColors, RGB};
+use super::plot_data::PlotData;
+use super::plot_styles::DEFAULT_RADIUS;
 use super::plot_utils::{StateProjection, StateProjectionSelection, MAX_NUM_PROJECTIONS};
 
-use super::plot_styles::DEFAULT_RADIUS;
 pub type Point2D = PlotPoint;
 pub type Points2D = Vec<Option<Point2D>>;
 impl FromRGB for Color32 {
@@ -18,39 +20,37 @@ impl FromRGB for Color32 {
     }
 }
 
+#[derive(PartialEq, Deserialize, Serialize)]
+#[serde(default)]
 pub struct Plot2D {
-    plot_backend: PlotBackend<Point2D, Color32>,
+    #[serde(skip)] // avoid saving points
+    plot_data: PlotData<Point2D, Color32>,
+    #[serde(skip)] // projections are set when first series is added
     projection_x: StateProjection,
+    #[serde(skip)]
     selection_x: StateProjectionSelection,
+    #[serde(skip)]
     projection_y: StateProjection,
+    #[serde(skip)]
     selection_y: StateProjectionSelection,
+    #[serde(skip)]
     selection_color: StateProjectionSelection,
+    #[serde(skip)] // start without data
     mean_number_of_shapes_guess: usize,
     point_size: f64,
 }
 
-impl PartialEq for Plot2D {
-    fn eq(&self, other: &Self) -> bool {
-        self.projection_x == other.projection_x
-            && self.projection_y == other.projection_y
-            && self.plot_backend.get_parameter() == other.plot_backend.get_parameter()
-            && self.plot_backend.get_parameter_values() == other.plot_backend.get_parameter_values()
-    }
-}
-
-impl Eq for Plot2D {}
-
 impl Default for Plot2D {
     fn default() -> Self {
         Self {
-            plot_backend: Default::default(),
-            // chaos app starts without params and 2 states
-            projection_x: StateProjection::S(0),
-            selection_x: StateProjectionSelection::S0,
-            projection_y: StateProjection::S(1),
-            selection_y: StateProjectionSelection::S1,
-            selection_color: StateProjectionSelection::S0,
-            mean_number_of_shapes_guess: 10,
+            plot_data: Default::default(),
+            // chaos app starts without data - projections are set when data is added
+            projection_x: Default::default(),
+            selection_x: Default::default(),
+            projection_y: Default::default(),
+            selection_y: Default::default(),
+            selection_color: Default::default(),
+            mean_number_of_shapes_guess: 100,
             point_size: DEFAULT_RADIUS,
         }
     }
@@ -61,8 +61,8 @@ impl Plot2D {
         self.selection_x == StateProjectionSelection::Par
     }
     pub fn set_parameter(&mut self, parameter: &'static str, par_values: Vec<f64>) {
-        let had_parameter = self.plot_backend.with_parameter();
-        self.plot_backend.set_parameter(parameter, par_values);
+        let had_parameter = self.plot_data.with_parameter();
+        self.plot_data.set_parameter(parameter, par_values);
         if !had_parameter {
             self.reset_projections();
         } else if self.parameters_are_shown() {
@@ -70,15 +70,15 @@ impl Plot2D {
         }
     }
     pub fn remove_parameter(&mut self) {
-        if self.plot_backend.with_parameter() {
-            self.plot_backend.remove_parameter();
+        if self.plot_data.with_parameter() {
+            self.plot_data.remove_parameter();
             self.reset_projections();
         }
     }
 
     fn reset_projections(&mut self) {
         let dim = self.number_of_dimensions();
-        let projection_color = if let Some(p) = self.plot_backend.get_parameter() {
+        let projection_color = if let Some(p) = self.plot_data.get_parameter() {
             self.projection_x = StateProjection::Par(p);
             self.projection_y = StateProjection::S(0);
             if dim > 1 {
@@ -95,7 +95,7 @@ impl Plot2D {
                 StateProjection::S(0)
             }
         };
-        self.plot_backend.set_projection_color(projection_color);
+        self.plot_data.set_projection_color(projection_color);
         self.selection_color = StateProjectionSelection::from(projection_color);
         self.selection_x = StateProjectionSelection::from(self.projection_x);
         self.selection_y = StateProjectionSelection::from(self.projection_y);
@@ -103,23 +103,23 @@ impl Plot2D {
 
     pub fn add_point_series(&mut self, data: ChaosDataVec<'_>) {
         let dimensionality = data.dimensionality();
-        if dimensionality != *self.plot_backend.dimensionality() {
-            self.plot_backend.remove_parameter();
-            self.plot_backend.set_dimensionality(dimensionality);
+        if dimensionality != *self.plot_data.dimensionality() {
+            self.plot_data.remove_parameter();
+            self.plot_data.set_dimensionality(dimensionality);
             self.reset_projections();
         }
-        let styles = self.plot_backend.create_styles_for_chaos_data(&data);
+        let styles = self.plot_data.create_styles_for_chaos_data(&data);
         let series = if self.parameters_are_shown() {
             self.create_point_series_with_parameters(data)
         } else {
             self.create_point_series_without_parameters(data)
         };
         let extrema = Self::get_extrema_from_series(&series);
-        self.plot_backend.add_series(series, styles, extrema);
+        self.plot_data.add_series(series, styles, extrema);
     }
 
     pub fn transform_points_1_d(&self, states: &[Option<State1>]) -> Points2D {
-        match self.plot_backend.latest_series() {
+        match self.plot_data.latest_series() {
             None => states
                 .iter()
                 .map(|v| v.map(|v| PlotPoint::new(0.0, v[0])))
@@ -168,9 +168,9 @@ impl Plot2D {
     const FRAC_1_SQRT_2: f32 = std::f32::consts::FRAC_1_SQRT_2; // 1.0 / 2_f32.sqrt();
 
     fn get_shapes_for_all_states(&self, plot_ui: &mut PlotUi) -> Vec<Shape> {
-        let n = self.plot_backend.num_series() as f32;
+        let n = self.plot_data.num_series() as f32;
         let point_size = (self.point_size as f32) / n;
-        self.plot_backend
+        self.plot_data
             .styled_series_iter()
             .enumerate()
             .flat_map(|(i, (points, styles))| {
@@ -192,10 +192,10 @@ impl Plot2D {
         default_fill: Color32,
         plot_ui: &mut PlotUi,
     ) -> Vec<Shape> {
-        let num_series = self.plot_backend.num_series();
+        let num_series = self.plot_data.num_series();
         let mut shapes = Vec::with_capacity(num_series * self.mean_number_of_shapes_guess);
         let screen_translate = plot_ui.transform().dpos_dvalue_x() as f32;
-        self.plot_backend
+        self.plot_data
             .all_styles_and_points_iter()
             .for_each(|(s, p)| {
                 let center = plot_ui.screen_from_plot(*p); // in screen coords
@@ -240,11 +240,11 @@ impl Plot2D {
 
     fn get_shapes_for_fractal(&self, plot_ui: &mut PlotUi) -> Vec<Shape> {
         let (special_color, positive_color) = (
-            self.plot_backend.special_color(),
-            self.plot_backend.positive_color(),
+            self.plot_data.special_color(),
+            self.plot_data.positive_color(),
         );
         let fractal_size = self.point_size as f32;
-        self.plot_backend
+        self.plot_data
             .all_styles_and_points_iter()
             .map(|(s, p)| {
                 let center = plot_ui.screen_from_plot(*p); // in screen coords
@@ -277,8 +277,8 @@ impl Plot2D {
     }
 
     fn set_bounds_from_points(&self, plot_ui: &mut PlotUi) {
-        let mut extrema = Vec::with_capacity(self.plot_backend.num_series() * 2);
-        self.plot_backend.extrema_iter().for_each(|(p_min, p_max)| {
+        let mut extrema = Vec::with_capacity(self.plot_data.num_series() * 2);
+        self.plot_data.extrema_iter().for_each(|(p_min, p_max)| {
             extrema.push(*p_min);
             extrema.push(*p_max);
         });
@@ -287,7 +287,7 @@ impl Plot2D {
     }
 
     pub fn explanation(&self, ui: &mut Ui) {
-        if self.plot_backend.with_parameter() {
+        if self.plot_data.with_parameter() {
             let param_select_label = if self.parameters_are_shown() {
                 LABEL_PARAMS_SHOWN
             } else {
@@ -296,7 +296,7 @@ impl Plot2D {
             ui.label(param_select_label);
         };
         let distribution_label = if self.parameters_are_shown() {
-            match self.plot_backend.dimensionality() {
+            match self.plot_data.dimensionality() {
                 DistributionDimensions::State(n) => {
                     if *n == 1 {
                         LABEL_PLOT2D_PAR_STATE_1
@@ -308,7 +308,7 @@ impl Plot2D {
                 DistributionDimensions::Fractal(_) => LABEL_PLOT2D_PAR_FRACTAL,
             }
         } else {
-            match self.plot_backend.dimensionality() {
+            match self.plot_data.dimensionality() {
                 DistributionDimensions::State(n) => {
                     if *n == 1 {
                         LABEL_PLOT2D_STATE_1
@@ -324,10 +324,10 @@ impl Plot2D {
     }
 
     pub fn options_ui(&mut self, ui: &mut Ui) {
-        let dims = self.plot_backend.dimensionality().clone();
+        let dims = self.plot_data.dimensionality().clone();
         let num_dims = dims.number_of_dimensions();
         let mut projection_vars_to_show = Vec::with_capacity(MAX_NUM_PROJECTIONS);
-        let par = self.plot_backend.get_parameter();
+        let par = self.plot_data.get_parameter();
         if let Some(p) = par {
             projection_vars_to_show.push(StateProjection::Par(p));
         }
@@ -363,7 +363,7 @@ impl Plot2D {
                     self.projection_y = StateProjection::state(self.selection_y);
                 }
             } else if has_x_selected {
-                self.plot_backend.clear();
+                self.plot_data.clear();
             }
         });
         if let Some(p) = par {
@@ -372,9 +372,7 @@ impl Plot2D {
         group_horizontal(ui, |ui| {
             let has_color_selected = StateProjection::projection_vars_selection(
                 "Color",
-                self.plot_backend
-                    .projection_color()
-                    .mode_string_choice(&dims),
+                self.plot_data.projection_color().mode_string_choice(&dims),
                 &mut self.selection_color,
                 &projection_vars_to_show,
                 &dims,
@@ -386,7 +384,7 @@ impl Plot2D {
                 } else {
                     StateProjection::state(self.selection_color)
                 };
-                self.plot_backend.set_projection_color(projection_color);
+                self.plot_data.set_projection_color(projection_color);
             }
         });
         if let DistributionDimensions::Particle(_) = dims {
@@ -405,7 +403,7 @@ impl Plot2D {
 
     pub fn ui(&mut self, ui: &mut Ui) {
         let plot = self.axis_configured_plot();
-        let num_series = self.plot_backend.num_series();
+        let num_series = self.plot_data.num_series();
         if num_series > 0 {
             let default_fill_color = if ui.visuals().dark_mode {
                 Color32::DARK_BLUE
@@ -418,7 +416,7 @@ impl Plot2D {
                 .show(ui, |plot_ui| {
                     // set the auto-bounds functionality in plot_ui since we draw directly to screen
                     self.set_bounds_from_points(plot_ui);
-                    shapes = match self.plot_backend.dimensionality() {
+                    shapes = match self.plot_data.dimensionality() {
                         DistributionDimensions::State(_) => self.get_shapes_for_all_states(plot_ui),
                         DistributionDimensions::Particle(_) => {
                             self.get_shapes_for_all_particles(default_fill_color, plot_ui)
@@ -429,17 +427,19 @@ impl Plot2D {
                 .response;
             // ctx.layer_painter(layer_id).extend(shapes); // avoids the clipping so that points overlay the options etc.
             ui.painter().with_clip_rect(rect).extend(shapes);
+        } else {
+            credits(ui);
         }
     }
 
     fn axis_configured_plot(&self) -> Plot {
         let (x_min, x_max) = if self.parameters_are_shown() {
-            (2.0 * PARAMETER_MIN, 2.0 * PARAMETER_MAX)
+            (4.0 * PARAMETER_MIN, 4.0 * PARAMETER_MAX)
         } else {
             (VALID_MIN, VALID_MAX)
         };
         let (y_min, y_max) = (VALID_MIN, VALID_MAX);
-        let dims = self.plot_backend.dimensionality();
+        let dims = self.plot_data.dimensionality();
         let (x_label, y_label) = if let DistributionDimensions::State(1) = dims {
             (String::from("S'"), String::from("S"))
         } else {
@@ -478,7 +478,7 @@ impl Plot2D {
     }
 
     delegate! {
-        to self.plot_backend{
+        to self.plot_data{
             pub fn series_color_mut(&mut self)-> &mut SeriesColorChoice;
             pub fn number_of_dimensions(&self) -> usize;
             pub fn get_parameter_values(&self) -> &Vec<f64>;
@@ -490,4 +490,31 @@ impl Plot2D {
             pub fn set_point_colormap(&mut self, colormap: SeriesColors);
         }
     }
+}
+
+fn credits(ui: &mut egui::Ui) {
+    ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
+        ui.horizontal(|ui| {
+            ui.hyperlink_to(
+                "Source Code",
+                "https://github.com/tomtuamnuq/rusty-chaos-craftor",
+            );
+            egui::warn_if_debug_build(ui);
+        });
+        ui.horizontal(|ui| {
+            ui.spacing_mut().item_spacing.x = 0.0;
+            ui.label("Powered by ");
+            ui.hyperlink_to("egui", "https://github.com/emilk/egui");
+            ui.label(", ");
+            ui.hyperlink_to(
+                "eframe",
+                "https://github.com/emilk/egui/tree/master/crates/eframe",
+            );
+            ui.label(", ");
+            ui.hyperlink_to("plotters", "https://github.com/plotters-rs");
+            ui.label(" and ");
+            ui.hyperlink_to("ode-solvers", "https://github.com/srenevey/ode-solvers");
+            ui.label(".");
+        });
+    });
 }
