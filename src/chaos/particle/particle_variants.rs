@@ -115,7 +115,7 @@ where
     }
 }
 
-impl System<State4> for ParticleXY {
+impl System<Time, State4> for ParticleXY {
     fn system(&self, _t: Time, y: &State4, dy: &mut State4) {
         let acceleration = self.force.get_state() / self.mass;
         *dy = State4::from_column_slice(&[y[2], y[3], acceleration[0], acceleration[1]]);
@@ -124,7 +124,7 @@ impl System<State4> for ParticleXY {
     }
 }
 
-impl System<State6> for ParticleXYZ {
+impl System<Time, State6> for ParticleXYZ {
     fn system(&self, _t: Time, y: &State6, dy: &mut State6) {
         let acceleration = self.force.get_state() / self.mass;
         *dy = State6::from_column_slice(&[

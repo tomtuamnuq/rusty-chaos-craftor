@@ -41,13 +41,13 @@ pub trait OdeSolverTrait {
 #[derive(Clone)]
 pub struct OdeSolver<V, T>
 where
-    T: Clone + System<V> + Integrator<Input = V, Output = V>,
+    T: Clone + System<Time, V> + Integrator<Input = V, Output = V>,
 {
     system: T,
     iterators: Vec<IntoIter<V>>,
 }
 
-impl<V: ValidStateCheck, T: Clone + System<V> + Integrator<Input = V, Output = V>> OdeSolver<V, T> {
+impl<V: ValidStateCheck, T: Clone + System<Time, V> + Integrator<Input = V, Output = V>> OdeSolver<V, T> {
     pub fn new(system: T) -> Self {
         Self {
             system,
@@ -93,7 +93,7 @@ impl<V: ValidStateCheck, T: Clone + System<V> + Integrator<Input = V, Output = V
     }
 }
 
-impl<V: ValidStateCheck, T: Clone + System<V> + Integrator<Input = V, Output = V>> OdeSolverTrait
+impl<V: ValidStateCheck, T: Clone + System<Time, V> + Integrator<Input = V, Output = V>> OdeSolverTrait
     for OdeSolver<V, T>
 {
     type State = V;
@@ -215,7 +215,7 @@ implement_integrator_Dop853! {
 // TODO Mackey Glass as 1D example ?
 // http://dx.doi.org/10.51537/chaos.1116084
 
-impl System<State2> for Brusselator {
+impl System<Time, State2> for Brusselator {
     fn system(&self, _t: Time, y: &State2, dy: &mut State2) {
         dy[0] = 1.0 - (self.b + 1.0) * y[0] + self.a * y[0] * y[0] * y[1];
         dy[1] = self.b * y[0] - self.a * y[0] * y[0] * y[1];
@@ -240,7 +240,7 @@ impl ChaosFormula for Brusselator {
     }
 }
 
-impl System<State2> for VanDerPol {
+impl System<Time, State2> for VanDerPol {
     fn system(&self, _t: Time, y: &State2, dy: &mut State2) {
         dy[0] = self.mu * (y[0] - y[0].powi(3) / 3.0 - y[1]);
         dy[1] = y[0] / self.mu;
@@ -265,7 +265,7 @@ impl ChaosFormula for VanDerPol {
     }
 }
 
-impl System<State2> for QuadrupTwoOrbit {
+impl System<Time, State2> for QuadrupTwoOrbit {
     fn system(&self, _t: Time, y: &State2, dy: &mut State2) {
         dy[0] = y[1]
             - y[0].signum()
@@ -300,7 +300,7 @@ impl ChaosFormula for QuadrupTwoOrbit {
     }
 }
 
-impl System<State3> for Lorenz {
+impl System<Time, State3> for Lorenz {
     fn system(&self, _t: Time, y: &State3, dy: &mut State3) {
         dy[0] = self.sigma * (y[1] - y[0]);
         dy[1] = y[0] * (self.rho - y[2]) - y[1];
@@ -330,7 +330,7 @@ impl ChaosFormula for Lorenz {
     }
 }
 
-impl System<State3> for Rossler {
+impl System<Time, State3> for Rossler {
     fn system(&self, _t: Time, y: &State3, dy: &mut State3) {
         dy[0] = -y[1] - y[2];
         dy[1] = y[0] + self.a * y[1];
@@ -360,7 +360,7 @@ impl ChaosFormula for Rossler {
     }
 }
 
-impl System<State3> for Chen {
+impl System<Time, State3> for Chen {
     fn system(&self, _t: Time, y: &State3, dy: &mut State3) {
         dy[0] = self.a * (y[1] - y[0]);
         dy[1] = (self.c - self.a) * y[0] - y[0] * y[2] + self.c * y[1];
@@ -394,7 +394,7 @@ impl ChaosFormula for Chen {
     }
 }
 
-impl System<State3> for Aizawa {
+impl System<Time, State3> for Aizawa {
     fn system(&self, _t: Time, y: &State3, dy: &mut State3) {
         dy[0] = y[0] * (y[2] - self.b) - self.d * y[1];
         dy[1] = self.d * y[0] + y[1] * (y[2] - self.b);
@@ -435,7 +435,7 @@ impl ChaosFormula for Aizawa {
     }
 }
 
-impl System<State3> for ChuasCircuit {
+impl System<Time, State3> for ChuasCircuit {
     fn system(&self, _t: Time, y: &State3, dy: &mut State3) {
         dy[0] = self.alpha * (y[1] - self.g(y[0]));
         dy[1] = y[0] - y[1] + y[2]; // actually x - y + Rz
@@ -474,7 +474,7 @@ impl ChaosFormula for ChuasCircuit {
     }
 }
 
-impl System<State3> for RabinovichFabrikant {
+impl System<Time, State3> for RabinovichFabrikant {
     fn system(&self, _t: Time, y: &State3, dy: &mut State3) {
         dy[0] = y[1] * (y[2] - 1.0 + y[0].powi(2)) + self.gamma * y[0];
         dy[1] = y[0] * (3.0 * y[2] + 1.0 - y[0].powi(2)) + self.gamma * y[1];
@@ -507,7 +507,7 @@ impl ChaosFormula for RabinovichFabrikant {
     }
 }
 
-impl System<State3> for GenesioTesi {
+impl System<Time, State3> for GenesioTesi {
     fn system(&self, _t: Time, y: &State3, dy: &mut State3) {
         dy[0] = y[1];
         dy[1] = y[2];
@@ -537,7 +537,7 @@ impl ChaosFormula for GenesioTesi {
     }
 }
 
-impl System<State3> for BurkeShaw {
+impl System<Time, State3> for BurkeShaw {
     fn system(&self, _t: Time, y: &State3, dy: &mut State3) {
         dy[0] = -self.s * (y[0] + y[1]);
         dy[1] = -y[1] - self.s * y[0] * y[2];
@@ -563,7 +563,7 @@ impl ChaosFormula for BurkeShaw {
     }
 }
 
-impl System<State3> for Halvorsen {
+impl System<Time, State3> for Halvorsen {
     fn system(&self, _t: Time, y: &State3, dy: &mut State3) {
         dy[0] = -self.a * y[0] - 4.0 * y[1] - 4.0 * y[2] - y[1] * y[1];
         dy[1] = -self.a * y[1] - 4.0 * y[2] - 4.0 * y[0] - y[2] * y[2];
@@ -593,7 +593,7 @@ impl ChaosFormula for Halvorsen {
     }
 }
 
-impl System<State3> for ThreeSpeciesLotkaVolterra {
+impl System<Time, State3> for ThreeSpeciesLotkaVolterra {
     fn system(&self, _t: Time, y: &State3, dy: &mut State3) {
         dy[0] = y[0] * (self.b - self.a11 * y[0] - self.a12 * y[1] - self.a13 * y[2]);
         dy[1] = y[1] * (-self.d1 + self.a21 * y[0] - self.a23 * y[2]);
@@ -632,7 +632,7 @@ impl ChaosFormula for ThreeSpeciesLotkaVolterra {
     }
 }
 
-impl System<State3> for Rikitake {
+impl System<Time, State3> for Rikitake {
     fn system(&self, _t: Time, y: &State3, dy: &mut State3) {
         dy[0] = -self.mu * y[0] + y[2] * y[1];
         dy[1] = -self.mu * y[1] + y[0] * (y[2] - self.a);
@@ -666,7 +666,7 @@ impl HindmarshRose {
         -self.c - self.d * x.powi(2)
     }
 }
-impl System<State3> for HindmarshRose {
+impl System<Time, State3> for HindmarshRose {
     fn system(&self, _t: Time, y: &State3, dy: &mut State3) {
         dy[0] = y[1] + self.phi(y[0]) - y[2] + self.i;
         dy[1] = self.psi(y[0]) - y[1];
@@ -705,7 +705,7 @@ impl ChaosFormula for HindmarshRose {
     }
 }
 
-impl System<State4> for Ababneh {
+impl System<Time, State4> for Ababneh {
     fn system(&self, _t: Time, y: &State4, dy: &mut State4) {
         let (x, y, z, w) = (y[0], y[1], y[2], y[3]);
         dy[0] = self.b * w - w * y;
@@ -764,7 +764,7 @@ impl ChaosFormula for Ababneh {
     }
 }
 
-impl System<State4> for WeiWang {
+impl System<Time, State4> for WeiWang {
     fn system(&self, _t: Time, y: &State4, dy: &mut State4) {
         let (x, y, z, w) = (y[0], y[1], y[2], y[3]);
         dy[0] = self.a * (y - x);

@@ -25,7 +25,7 @@ strum_macros = "0.25"
 strum = "0.25"
 web-time = "0.2.4"
 
-ode_solvers = "0.3"
+ode_solvers = "0.4"
 rand_distr = "0.4"
 rand = "0.8"
 nalgebra = "0.32"
