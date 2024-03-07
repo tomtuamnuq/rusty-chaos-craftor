@@ -1,18 +1,19 @@
-use egui::{Align2, Color32, ComboBox, Context, InnerResponse, Ui, Window};
+use egui::{Align2, Color32, ComboBox, InnerResponse, Ui, Vec2, Window};
 use strum::IntoEnumIterator;
-pub fn conf_window(title: &'static str, ctx: &Context, pivot: Align2) -> Window<'static> {
-    let default_pos = match pivot {
-        Align2::CENTER_TOP => ctx.screen_rect().center_top(),
-        Align2::LEFT_TOP => ctx.screen_rect().left_top(),
-        Align2::LEFT_BOTTOM => ctx.screen_rect().left_bottom(),
-        Align2::RIGHT_TOP => ctx.screen_rect().right_top(),
-        Align2::RIGHT_BOTTOM => ctx.screen_rect().right_bottom(),
-        _ => ctx.screen_rect().center(),
+const OFFSET_X: f32 = 2.0;
+const OFFSET_Y: f32 = 1.0;
+pub fn conf_window(title: &'static str, pivot: Align2) -> Window<'static> {
+    let offset = match pivot {
+        Align2::CENTER_TOP => Vec2::new(0.0, OFFSET_Y),
+        Align2::LEFT_TOP => Vec2::new(OFFSET_X, OFFSET_Y),
+        Align2::LEFT_BOTTOM => Vec2::new(OFFSET_X, -OFFSET_Y),
+        Align2::RIGHT_TOP => Vec2::new(-OFFSET_X, OFFSET_Y),
+        Align2::RIGHT_BOTTOM => Vec2::new(-OFFSET_X, -OFFSET_Y),
+        _ => Vec2::ZERO,
     };
     Window::new(title)
         .collapsible(true)
-        .pivot(pivot)
-        .fixed_pos(default_pos)
+        .anchor(pivot, offset)
         .default_open(true)
         .resizable(true)
 }

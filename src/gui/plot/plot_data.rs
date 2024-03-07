@@ -254,8 +254,9 @@ impl<P, C: FromRGB + Clone> PlotData<P, C> {
             .collect()
     }
 }
-mod tests {
 
+#[cfg(test)]
+mod tests {
     use super::*;
     use crate::{chaos::data::*, gui::plot::plot_colors::RGB};
     #[test]

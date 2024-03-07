@@ -15,8 +15,7 @@ use paste::paste;
 use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
-const PARAMETER_DELTA: f64 = 0.1;
-const PARAMETER_RANGE_NUM: usize = 200;
+const MAX_NUM_OF_PAR: usize = 200;
 
 fn parameter_view_single(
     par: &mut f64,
@@ -25,9 +24,10 @@ fn parameter_view_single(
     ui: &mut Ui,
 ) -> bool {
     let (par_min, par_max) = limit_par_range(par_min, par_max);
+    let delta = (par_max - par_min).abs() / (MAX_NUM_OF_PAR as f64);
     let response = ui.add(
         egui::DragValue::new(par)
-            .speed(PARAMETER_DELTA)
+            .speed(delta)
             .clamp_range(par_min..=par_max) // Range inclusive
             .suffix(format!(" {}", suffix)),
     );
@@ -37,7 +37,7 @@ fn parameter_view_single(
 fn limit_par_range(par_min: f64, par_max: f64) -> (f64, f64) {
     let (mut par_min, par_max) = (par_min.max(PARAMETER_MIN), par_max.min(PARAMETER_MAX));
     if par_min == par_max {
-        par_min = par_max - PARAMETER_DELTA;
+        par_min = par_max - 0.1;
     }
     (par_min, par_max)
 }
@@ -49,23 +49,24 @@ fn parameter_view_ranged(
     ui: &mut Ui,
 ) -> bool {
     let (total_par_min, total_par_max) = limit_par_range(total_par_min, total_par_max);
+    let drag_delta = (total_par_max - total_par_min).abs() / (MAX_NUM_OF_PAR as f64);
     let response = ui.add(
         egui::DragValue::new(&mut chosen_par_range.0)
-            .speed(PARAMETER_DELTA) // TODO depend on num params
+            .speed(drag_delta)
             .clamp_range(total_par_min..=total_par_max) // Range inclusive
-            .suffix(format!("Min {}", suffix)),
+            .suffix(format!("🔻{}", suffix)),
     );
     let par_range_min_changed = response.changed();
     let response = ui.add(
         egui::DragValue::new(&mut chosen_par_range.1)
-            .speed(PARAMETER_DELTA)
+            .speed(drag_delta)
             .clamp_range(total_par_min..=total_par_max) // Range inclusive
-            .suffix(format!("Max {}", suffix)),
+            .suffix(format!("🔺{}", suffix)),
     );
     integer_slider(
         LABEL_NUM_PARAMS,
         num_params,
-        PARAMETER_RANGE_NUM,
+        MAX_NUM_OF_PAR,
         ui,
         TIP_NUM_PARAMS,
     );
@@ -628,6 +629,6 @@ impl_continuous_variants! {
     HindmarshRose, OdeSolver, { [a, "a"] , [b, "b"] , [c, "c"] , [d, "d"] , [r, "r"] , [i, "i"] },
     Ababneh, OdeSolver, { [a, "a"]  , [b, "b"]   },
     WeiWang, OdeSolver, { [a, "a"]  , [b, "b"]  , [c, "c"]  , [d, "d"]  , [k, "k"]   },
-    ParticleXY, ParticleXYSystemSolver, { [s, "s"] , [m, "m"] , [l, "l"] },
-    ParticleXYZ, ParticleXYZSystemSolver, { [s, "s"] , [m, "m"] , [l, "l"] }
+    ParticleXY, ParticleXYSystemSolver, { [s, "s 💥"] , [m, "m ⚡"] , [l, "l ⭐"] },
+    ParticleXYZ, ParticleXYZSystemSolver, { [s, "s 💥"] , [m, "m ⚡"] , [l, "l ⭐"] }
 }

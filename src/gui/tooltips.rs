@@ -1,4 +1,4 @@
-pub const LABEL_BUTTON_RESET: &str = "Reset";
+pub const LABEL_BUTTON_RESET: &str = "Reset 🔄";
 pub const TIP_BUTTON_RESET: &str = "Restore all app settings to their default values. Note that this will also affect any generated data, such as point series or benchmark results. The app saves the current configuration every 30 seconds.";
 
 pub const LABEL_INIT_DATA: &str = "Init Data";
@@ -13,7 +13,8 @@ pub const TIP_NUM_PARAMS: &str = "Set the number of parameters. They are evenly 
 
 pub const LABEL_NUM_EXECS: &str = "Nr Executions";
 pub const TIP_NUM_EXECS: &str = "Set the number of executions per frame. Defines how many times a discrete map is applied between two frames, and how many infinitesimal steps an ODE solver performs. Set to 1 and use the number of frames for visualizations.";
-pub const LABEL_RUN: &str = "Run";
+pub const LABEL_RUN: &str = "▶";
+pub const LABEL_PAUSE: &str = "◼";
 pub const TIP_RUN: &str = "Run or pause the execution of a chaotic function. Useful for immediately stopping a high CPU load to reconfigure.";
 pub const LABEL_MAIN_MODE: &str = "Main Mode";
 pub const TIP_MAIN_MODE: &str = "Show a plot or run a benchmark of chaotic data.";
@@ -33,7 +34,7 @@ pub const TIP_PARTICLE_MODE: &str = "Choose between a 2D or 3D particle simulati
 pub const TIP_FRACTAL_MODE: &str =
     "Choose between 2D rings (Complex, Dual, Perplex) or 4D Quaternions.";
 
-pub const LABEL_PLOT_BACKEND: &str = "Plot Dim";
+pub const LABEL_PLOT_BACKEND: &str = "Dimensions";
 pub const TIP_PLOT_BACKEND: &str = "Select the plotting backend to use. The egui_plot crate provides a 2D plot. 3D plots are available through Plotters and the egui_plotters crate.";
 
 pub const LABEL_NUM_FRAMES: &str = "Frame Rate";

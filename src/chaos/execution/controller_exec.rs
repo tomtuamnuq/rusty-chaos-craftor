@@ -327,6 +327,8 @@ impl ChaosExecutionController {
         }
     }
 }
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::chaos::functions::*;

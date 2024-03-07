@@ -681,6 +681,7 @@ impl ChaosDescription for Logspace {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::chaos::functions::*;

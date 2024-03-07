@@ -434,7 +434,7 @@ impl Plot2D {
 
     fn axis_configured_plot(&self) -> Plot {
         let (x_min, x_max) = if self.parameters_are_shown() {
-            (2.0 * PARAMETER_MIN, 2.0 * PARAMETER_MAX)
+            (4.0 * PARAMETER_MIN, 4.0 * PARAMETER_MAX)
         } else {
             (VALID_MIN, VALID_MAX)
         };

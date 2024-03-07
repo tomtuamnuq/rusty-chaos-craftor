@@ -32,10 +32,10 @@ nalgebra = "0.32"
 num-dual = "0.8"
 
 # switch manually between local git and upstream
-#egui-plotter = { git = "https://github.com/Gip-Gip/egui-plotter.git", branch = "main" }
-#perplex_num = { git = "https://github.com/tomtuamnuq/perplex_num.git", branch = "main" }
-egui-plotter = { path = "../egui-plotter" }
-perplex_num = { path = "../perplex_num" }
+egui-plotter = { git = "https://github.com/Gip-Gip/egui-plotter.git", branch = "main" }
+perplex_num = { git = "https://github.com/tomtuamnuq/perplex_num.git", branch = "main" }
+#egui-plotter = { path = "../egui-plotter" }
+#perplex_num = { path = "../perplex_num" }
 
 # native:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

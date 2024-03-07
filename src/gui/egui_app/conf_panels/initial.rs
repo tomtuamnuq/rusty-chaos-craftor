@@ -659,12 +659,22 @@ impl FractalMode {
     }
 }
 
-#[derive(PartialEq, Copy, Clone, Default, EnumIter, IntoStaticStr, Deserialize, Serialize)]
+#[derive(PartialEq, Copy, Clone, Default, EnumIter, Deserialize, Serialize)]
 enum InitialDistributionGroup {
     #[default]
     Probabilistic,
     Mesh,
     Deterministic,
+}
+
+impl From<InitialDistributionGroup> for &'static str {
+    fn from(val: InitialDistributionGroup) -> Self {
+        match val {
+            InitialDistributionGroup::Probabilistic => "🎲",
+            InitialDistributionGroup::Deterministic => "🎯",
+            InitialDistributionGroup::Mesh => "▦",
+        }
+    }
 }
 
 const DISTRIBUTIONS_ALL: [InitialDistributionGroup; 3] = [
@@ -815,6 +825,8 @@ impl InitialPanel {
     pub fn ui(&mut self, ui: &mut Ui) {
         group_horizontal(ui, |ui| {
             let _ = combo_box(LABEL_INIT_MODE, &mut self.init_mode, ui, TIP_INIT_MODE);
+        });
+        group_horizontal(ui, |ui| {
             let max_num_samples = self.max_num_samples();
             integer_slider(
                 LABEL_NUM_SAMPLES,

@@ -195,38 +195,40 @@ impl ExecutionPanel {
     pub fn ui(&mut self, ui: &mut Ui, dims: DistributionDimensions, num_execution_limit: usize) {
         self.check_compatible_chaotic_function(&dims);
         ui.vertical(|ui| {
-            ScrollArea::vertical().show(ui, |ui| {
-                match dims {
-                    DistributionDimensions::State(_) => {
-                        ui.horizontal(|ui| {
+            match dims {
+                DistributionDimensions::State(_) => {
+                    ui.horizontal(|ui| {
+                        ScrollArea::vertical().show(ui, |ui| {
                             self.discrete_map_listing(ui, &dims);
                             ui.separator();
                             self.diff_system_ui(ui, &dims);
-                        });
-                    }
-                    DistributionDimensions::Particle(n) => {
-                        ui.heading(format!("{n}D Particles"));
-                        ui.separator();
-                        self.particle_ui(ui, n);
-                    }
-                    DistributionDimensions::Fractal(ref fractal_ring) => {
-                        let ring_type: &'static str = fractal_ring.into();
-                        ui.horizontal(|ui| {
-                            ui.heading(format!("{ring_type} Fractals "));
-                            let (reference, tooltip) = match fractal_ring {
-                                FractalDimensions::Complex => (LINK_COMPLEX, TIP_COMPLEX),
-                                FractalDimensions::Dual => (LINK_DUAL, TIP_DUAL),
-                                FractalDimensions::Perplex => (LINK_PERPLEX, TIP_PERPLEX),
-                                FractalDimensions::Quaternion => (LINK_QUATERNION, TIP_QUATERNION),
-                            };
-                            add_hyperlink("Info", reference, ui, tooltip);
-                        });
-                        ui.horizontal(|ui| {
+                        }); // Scroll Area
+                    });
+                }
+                DistributionDimensions::Particle(n) => {
+                    ui.heading(format!("{n}D Particles"));
+                    ui.separator();
+                    self.particle_ui(ui, n);
+                }
+                DistributionDimensions::Fractal(ref fractal_ring) => {
+                    let ring_type: &'static str = fractal_ring.into();
+                    ui.horizontal(|ui| {
+                        ui.heading(format!("{ring_type} Fractals "));
+                        let (reference, tooltip) = match fractal_ring {
+                            FractalDimensions::Complex => (LINK_COMPLEX, TIP_COMPLEX),
+                            FractalDimensions::Dual => (LINK_DUAL, TIP_DUAL),
+                            FractalDimensions::Perplex => (LINK_PERPLEX, TIP_PERPLEX),
+                            FractalDimensions::Quaternion => (LINK_QUATERNION, TIP_QUATERNION),
+                        };
+                        add_hyperlink("Info", reference, ui, tooltip);
+                    });
+                    ui.horizontal(|ui| {
+                        ScrollArea::vertical().show(ui, |ui| {
                             self.fractal_ui(ui, &dims);
-                        });
-                    }
-                };
-            });
+                        }); // Scroll Area
+                    });
+                }
+            };
         });
         ScrollArea::both().show(ui, |ui| {
             if let Some(open) = &self.chaotic_discrete_map {

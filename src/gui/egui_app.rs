@@ -212,7 +212,11 @@ impl ChaosApp {
                 ui,
                 TIP_MAIN_MODE,
             );
-            add_checkbox(LABEL_RUN, &mut self.executes, ui, TIP_RUN);
+            let executes = self.executes;
+            let label_run = if executes { LABEL_PAUSE } else { LABEL_RUN };
+            if clickable_button(label_run, executes, true, ui, TIP_RUN) {
+                self.executes = !executes;
+            }
         });
         ui.vertical(|ui| {
             match self.open_main_panel {
@@ -299,7 +303,7 @@ impl eframe::App for ChaosApp {
             MainPanel::ChaoticPlot => Align2::LEFT_TOP,
             MainPanel::Benchmark => Align2::CENTER_TOP,
         };
-        conf_window("Configuration", ctx, conf_align).show(ctx, |ui| {
+        conf_window("Configuration", conf_align).show(ctx, |ui| {
             let response = ui
                 .vertical(|ui| {
                     self.add_general_conf(ui);
@@ -309,7 +313,7 @@ impl eframe::App for ChaosApp {
                 mouse_over_main_panel = false;
             }
         });
-        conf_window("Chaos Creation", ctx, Align2::RIGHT_TOP).show(ctx, |ui| {
+        conf_window("Chaos Creation", Align2::RIGHT_TOP).show(ctx, |ui| {
             let response = ui
                 .vertical(|ui| {
                     self.add_chaos_conf(ui);
