@@ -21,6 +21,8 @@ pub type Points3D = Vec<Option<Point3D>>;
 type BackendData = PlotBackend<Point3D, RGBColor>;
 type Chart3D<'a, 'b> =
     ChartContext<'a, EguiBackend<'b>, Cartesian3d<RangedCoordf64, RangedCoordf64, RangedCoordf64>>;
+
+#[derive(PartialEq, Eq, Debug, Deserialize, Serialize)]
 struct AxisData {
     pub x_label: String,
     pub y_label: String,
@@ -35,7 +37,7 @@ impl Default for AxisData {
         }
     }
 }
-#[derive(Clone, Copy, Deserialize, Serialize)]
+#[derive(Clone, Copy, PartialEq, Deserialize, Serialize)]
 #[serde(default)]
 struct Options3D {
     pub point_size: f64,
@@ -60,6 +62,13 @@ impl FromRGB for RGBColor {
 }
 struct Chart3DWithData {
     pub chart: Chart<(BackendData, AxisData, Options3D)>,
+}
+impl PartialEq for Chart3DWithData {
+    fn eq(&self, other: &Self) -> bool {
+        let data = self.chart.get_data();
+        let other_data = other.chart.get_data();
+        data.2.eq(&other_data.2) && data.1.eq(&other_data.1) && data.0.eq(&other_data.0)
+    }
 }
 fn configure_axis(chart: &mut Chart3D<'_, '_>, axis_data: &AxisData) {
     let (lx, ly, lz) = (&axis_data.x_label, &axis_data.y_label, &axis_data.z_label);
@@ -259,7 +268,7 @@ impl Default for Chart3DWithData {
     }
 }
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Default, PartialEq, Deserialize, Serialize)]
 #[serde(default)]
 pub struct Plot3D {
     #[serde(skip)]
@@ -280,21 +289,6 @@ pub struct Plot3D {
     #[serde(skip)]
     selection_color: StateProjectionSelection,
 }
-
-impl PartialEq for Plot3D {
-    // TODO all fields should be considered
-    fn eq(&self, other: &Self) -> bool {
-        let self_data = self.series_holder();
-        let other_data = other.series_holder();
-        self.projection_x == other.projection_x
-            && self.projection_y == other.projection_y
-            && self.projection_z == other.projection_z
-            && self_data.get_parameter() == other_data.get_parameter()
-            && self_data.get_parameter_values() == other_data.get_parameter_values()
-    }
-}
-
-impl Eq for Plot3D {}
 
 impl Plot3D {
     fn series_holder(&self) -> &BackendData {

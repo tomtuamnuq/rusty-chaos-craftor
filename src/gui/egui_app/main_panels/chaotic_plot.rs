@@ -6,7 +6,7 @@ use crate::utils::Timer;
 use egui::Ui;
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize)]
+#[derive(PartialEq, Deserialize, Serialize)]
 #[serde(default)]
 pub struct PlotPanel {
     #[serde(skip)] // start without generating data immediately

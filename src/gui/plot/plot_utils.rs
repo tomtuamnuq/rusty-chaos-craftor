@@ -22,7 +22,7 @@ pub fn flat_map_data_vec_and_parameter<V: FromStateVec + ValidStateCheck, P>(
         .collect()
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Deserialize, Serialize)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy, Deserialize, Serialize)]
 pub enum StateProjection {
     Par(&'static str),
     S(usize),

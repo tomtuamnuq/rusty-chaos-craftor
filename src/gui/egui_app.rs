@@ -30,6 +30,18 @@ pub struct ChaosApp {
     #[serde(skip)] // always start without executing
     executes: bool,
 }
+impl PartialEq for ChaosApp {
+    fn eq(&self, other: &Self) -> bool {
+        // only compare options for reset
+        self.open_conf_panel == other.open_conf_panel
+        && self.open_main_panel == other.open_main_panel
+        && self.executes == other.executes // most of the times this will end the comparison to default
+        && self.plot_panel == other.plot_panel
+        && self.initial_panel == other.initial_panel
+        && self.execute_panel == other.execute_panel
+        && self.benchmark_panel == other.benchmark_panel
+    }
+}
 
 impl ChaosApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
@@ -188,7 +200,16 @@ impl ChaosApp {
                 }
             }
             egui::widgets::global_dark_light_mode_buttons(ui);
-            // egui::reset_button(ui, self); // TODO: derive PartialEq for ChaosApp
+            if clickable_button(
+                LABEL_BUTTON_RESET,
+                false,
+                true,
+                ui,
+                TIP_BUTTON_RESET,
+            ) {
+                // always enabled avoids comparing all initial distribution and chaotic function parameters
+                *self = Default::default();
+            }
         });
         group_horizontal(ui, |ui| {
             combo_box(

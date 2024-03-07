@@ -5,6 +5,7 @@ use crate::chaos::data::{ChaosData, DistributionDimensions, StateIndex};
 use delegate::delegate;
 use std::collections::vec_deque::{self, VecDeque};
 pub const DEFAULT_MAX_SERIES: usize = 20;
+
 struct PlotSeriesHolder<S> {
     series_collection: VecDeque<S>,
     max_num_series: usize,
@@ -48,7 +49,7 @@ impl<S> Default for PlotSeriesHolder<S> {
         }
     }
 }
-
+#[derive(Debug, Clone, PartialEq)]
 struct PlotDimensions {
     dimensions: DistributionDimensions,
     parameter: Option<&'static str>,
@@ -103,6 +104,16 @@ pub struct PlotBackend<P, C> {
     plot_dimensions: PlotDimensions,
     projection_color: StateProjection,
     selection_series_color: SeriesColorChoice,
+}
+
+impl<P, C> PartialEq for PlotBackend<P, C> {
+    fn eq(&self, other: &Self) -> bool {
+        // only compare options for reset
+        self.series_colorer == other.series_colorer
+            && self.plot_dimensions == other.plot_dimensions
+            && self.projection_color == other.projection_color
+            && self.selection_series_color == other.selection_series_color
+    }
 }
 
 impl<P, C: FromRGB> Default for PlotBackend<P, C> {

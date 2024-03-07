@@ -31,6 +31,16 @@ impl Default for BenchmarkPanel {
     }
 }
 
+impl PartialEq for BenchmarkPanel {
+    fn eq(&self, other: &Self) -> bool {
+        // only compare options for reset
+        self.run_benchmark == other.run_benchmark
+            && self.use_warmup == other.use_warmup
+            && self.num_iterations == other.num_iterations
+            && self.num_warmups == other.num_warmups
+    }
+}
+
 impl BenchmarkPanel {
     pub fn benchmark_toggle(&mut self) -> bool {
         if self.run_benchmark {

@@ -20,7 +20,7 @@ impl FromRGB for Color32 {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(PartialEq, Deserialize, Serialize)]
 #[serde(default)]
 pub struct Plot2D {
     #[serde(skip)] // avoid saving points
@@ -39,18 +39,6 @@ pub struct Plot2D {
     mean_number_of_shapes_guess: usize,
     point_size: f64,
 }
-
-impl PartialEq for Plot2D {
-    // TODO all fields should be considered
-    fn eq(&self, other: &Self) -> bool {
-        self.projection_x == other.projection_x
-            && self.projection_y == other.projection_y
-            && self.plot_backend.get_parameter() == other.plot_backend.get_parameter()
-            && self.plot_backend.get_parameter_values() == other.plot_backend.get_parameter_values()
-    }
-}
-
-impl Eq for Plot2D {}
 
 impl Default for Plot2D {
     fn default() -> Self {
@@ -442,7 +430,7 @@ impl Plot2D {
             // ctx.layer_painter(layer_id).extend(shapes); // avoids the clipping so that points overlay the options etc.
             ui.painter().with_clip_rect(rect).extend(shapes);
         } else {
-            powered_by_egui_and_eframe(ui);
+            credits(ui);
         }
     }
 
@@ -506,23 +494,32 @@ impl Plot2D {
     }
 }
 
-fn powered_by_egui_and_eframe(ui: &mut egui::Ui) {
+fn credits(ui: &mut egui::Ui) {
     ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-        ui.add(egui::github_link_file!(
-            "https://github.com/tomtuamnuq/rusty-chaos-craftor",
-            "Source code."
-        ));
+        ui.horizontal(|ui| {
+            ui.hyperlink_to("Source Code", "https://github.com/tomtuamnuq/rusty-chaos-craftor");
+            egui::warn_if_debug_build(ui);
+        });
         ui.horizontal(|ui| {
             ui.spacing_mut().item_spacing.x = 0.0;
             ui.label("Powered by ");
             ui.hyperlink_to("egui", "https://github.com/emilk/egui");
-            ui.label(" and ");
+            ui.label(", ");
             ui.hyperlink_to(
                 "eframe",
                 "https://github.com/emilk/egui/tree/master/crates/eframe",
             );
+            ui.label(", ");
+            ui.hyperlink_to(
+                "plotters",
+                "https://github.com/plotters-rs",
+            );
+            ui.label(" and ");
+            ui.hyperlink_to(
+                "ode-solvers",
+                "https://github.com/srenevey/ode-solvers",
+            );
             ui.label(".");
         });
-        egui::warn_if_debug_build(ui);
     });
 }

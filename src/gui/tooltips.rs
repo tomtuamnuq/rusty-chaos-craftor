@@ -1,3 +1,6 @@
+pub const LABEL_BUTTON_RESET: &str = "Reset";
+pub const TIP_BUTTON_RESET: &str = "Restore all app settings to their default values. Note that this will also affect any generated data, such as point series or benchmark results. The app saves the current configuration every 30 seconds.";
+
 pub const LABEL_INIT_DATA: &str = "Init Data";
 pub const TIP_INIT_DATA: &str = "Generate chaotic data with the selected distributions.";
 pub const LABEL_REINIT_DATA: &str = "Reinit Data";
@@ -114,7 +117,7 @@ pub const TIP_FRACTAL_QUATERNION_RE: &str = "The real part 'a' of the quaternion
 pub const TIP_FRACTAL_QUATERNION_I: &str = "The i-component 'b' of the quaternion z = a + b i + c j + d k, defining the y-value of the pixel and the i-component of z0.";
 pub const TIP_FRACTAL_QUATERNION_J: &str = "The j-component 'c' of the quaternion z = a + b i + c j + d k, defining the z-value of the pixel and the j-component of z0.";
 pub const TIP_FRACTAL_QUATERNION_K: &str = "The k-component 'd' of the quaternion z = a + b i + c j + d k, usually fixed to visualize the dimensions a, b, and c.";
-
+// benchmark
 pub const LABEL_WARMUP: &str = "Warm-Up";
 pub const TIP_WARMUP: &str = "Choose whether to run the chaotic function several times before measurement for benchmarking purposes.";
 pub const LABEL_NUM_WARMUPS: &str = "Number of Warm-Ups";

@@ -18,7 +18,7 @@ impl FromRGB for RGB {
     }
 }
 
-#[derive(PartialEq, Eq, Default, Clone, Copy, EnumIter, Deserialize, Serialize)]
+#[derive(PartialEq, Eq, Debug, Default, Clone, Copy, EnumIter, Deserialize, Serialize)]
 pub enum SeriesColors {
     BlackWhite,
     Bone,
@@ -106,7 +106,7 @@ impl SeriesColors {
     }
 }
 
-#[derive(PartialEq, Eq, Default, Clone, Copy, EnumIter)]
+#[derive(PartialEq, Eq, Debug, Default, Clone, Copy, EnumIter)]
 pub enum SeriesColorChoice {
     Same,
     #[default]
@@ -124,7 +124,7 @@ impl From<SeriesColorChoice> for &'static str {
         }
     }
 }
-
+#[derive(Debug, PartialEq, Eq)]
 pub struct SeriesColorer {
     colormap: SeriesColors,
     color_counter: usize,
