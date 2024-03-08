@@ -67,3 +67,24 @@ Special thanks to the following Rust crates that made this project possible:
 - `egui_plotter`: Integration of Plotters 3D chart into the egui main panel. [Repository](https://docs.rs/egui-plotter)
 - `plotters`: The powerful backend for 3D plotting capabilities. [Repository](https://github.com/plotters-rs)
 - `ode_solvers`: For simulating particle systems and chaotic differential equations. [Repository](https://github.com/srenevey/ode-solvers)
+
+I would like to express my gratitude to the following authors and sources for providing the mathematical foundations of the chaotic discrete maps, systems of ordinary differential equations, and fractal set generators that power this project. Their work has been instrumental in creating this interactive exploration tool for chaos theory. All references can also be found in the **Info** tooltips of the GUI.
+
+### Discrete Maps
+- Paul Bourke for the **De Jong Ring** and **Clifford** attractors, which are two-dimensional chaotic maps that produce complex and beautiful patterns. [Website](https://paulbourke.net/fractals/)
+- Shah et al. for a **three-dimensional** chaotic map that has applications in digital audio security. [Publication](https://doi.org/10.1007/s11042-021-10697-3)
+- Huang et al. for a *three-dimensional discrete **memristive** chaotic system that has infinite wide parameter range and coexisting attractors*. [Publication](http://dx.doi.org/10.21203/rs.3.rs-1109068/v1)
+- Hamadneh et al. for a **four-dimensional** *fractional chaotic map with constant and variable order*. [Publication](https://doi.org/10.3390/math11204332)
+
+### Systems of Ordinary Differential Equations
+- Paul Bourke for the **Burke-Shaw** system, which is a three-dimensional chaotic system with different symmetries and bifurcations. [Website](https://paulbourke.net/fractals/burkwshaw)
+- Sambas et al. for the description of the **Genesio-Tesi** system in their work *Design, Analysis of the Genesio Tesi Chaotic System and its Electronic Experimental Implemenation* [Publication](https://paulbourke.net/fractals/burkwshaw)
+- Zhang et al. for the *analysis of three species **Lotka-Volterra** food web models with omnivory*. [Publication](https://doi.org/10.1016/j.jmaa.2015.01.035)
+- Ababneh for a new **four-dimensional** chaotic attractor, which has a complex structure and a wide range of parameters. [Publication](https://doi.org/10.1016/j.asej.2016.08.020)
+- Wang, Feng and Chen for a new **four-dimensional** chaotic system. [Publication](https://doi.org/10.3389/fphy.2022.906138)
+
+### Fractal Configurations and Algorithms
+- Paul Bourke for the probability, sinus, sinh, and zubieta Julia set generators, which are complex functions that produce fractal patterns based on the initial conditions. [Website](https://paulbourke.net/fractals/)
+- Li, Wang, and Chen for Algorithm 1 in *On the **quaternion** Julia sets via Picard–Mann iteration*. [Paper](https://doi.org/10.1007/s11071-023-08785-0)
+- Gdawiec, Fariello and Santos for Algorithm 3 in *A novel approach to generate Mandelbrot sets, Julia sets and **biomorphs** via viscosity approximation method*. [Paper](https://doi.org/10.1016/j.chaos.2022.112540)
+- Bankers et al. for their work *Julia and Mandelbrot Sets for Dynamics over the Hyperbolic Numbers*, which motivated me to include **Perplex** numbers in this project. Perplex (also known as hyperbolic) numbers are a variation of complex numbers that encode geometric properties of the Minkowski space. [Paper](https://doi.org/10.3390/fractalfract3010006)

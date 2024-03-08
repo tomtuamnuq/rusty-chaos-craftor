@@ -527,7 +527,7 @@ impl Default for GenesioTesi {
 }
 impl ChaosDescription for GenesioTesi {
     fn description(&self) -> String {
-        "See the paper 'Design, Analysis of the GenesioTest Chaotic System and its Electronic Experimental Implemenation'.".into()
+        "See the paper 'Design, Analysis of the Genesio Tesi Chaotic System and its Electronic Experimental Implemenation'.".into()
     }
     fn reference(&self) -> &'static str {
         "https://www.researchgate.net/publication/303369826_Design_analysis_of_the_Genesio-Tesi_chaotic_system_and_its_electronic_experimental_implementation"
