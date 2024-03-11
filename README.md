@@ -4,6 +4,7 @@
 [Live App ![Live App](./assets/icon_ios_touch_192.png)](https://tomtuamnuq.github.io/rusty-chaos-craftor/) 
 ## Overview
 RustyChaosCraftor is an interactive exploration tool for visualizing dynamics in chaotic systems. Driven by a fascination with the complex patterns emerging from simple mathematical constructs, this project aims to provide profound insights into chaos theory through highly customizable visualization techniques.
+![Screenshot of the App Configuration Panels with colorful 2D fractal in the background](./assets/screenshots/conf_plot_init.jpg)
 
 ### Core Functionality
 - Multidimensional real-time visualization of chaotic functions, fractals, and particle systems.
@@ -17,21 +18,42 @@ RustyChaosCraftor is an interactive exploration tool for visualizing dynamics in
 - To examine the impact of initial conditions and minor parameter variations on chaotic systems.
 - To analyze various types of fractals, attractors, and number systems within chaos theory.
 
-
 ## Features
 - **Efficient Chaos**: 1D, 2D, 3D, and 4D discrete chaotic maps implemented in Rust, generating a diverse array of patterns.
+
+![A GIF showing the selection of 2D discrete chaotic maps](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExYmNhcnMxcDNlMGlsdTNmYmdicnFlN3I5NHJmeXJrMGtlZDI0aWxkdiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/zeVNvPBpRbz5GdfNPy/giphy.gif)
+
+[comment]: (./assets/screenshots/select_maps.gif)
+
 - **Dynamic Systems**: Live solutions of 2D, 3D, and 4D ordinary differential equations, creating visually stunning attractors.
+
+![A GIF showing the motion of a 3D attractor](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExYm9uY3hqb2Q2MWVsZXZ1NnBsdTQwb3B6amk3MnEweGJwYXM4eWZjaiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/BRcXTsN1us4WqWjuvM/giphy.gif)
+
+[comment]: (./assets/screenshots/attractor_rikitake.gif)
+
 - **Particle Simulation**: An interactive N-Body problem solver in 2D and 3D, exploring attractive and repulsive forces.
-- **Fractal Generation**: Support for four number systems (algebraic rings) including Complex, Dual, Perplex numbers, and Quaternions.
+
+![A GIF showing the interaction of particles in 3D](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZnpwNGF5ZXV4M2I0ajFnaGEwazAxZHJpcnNicHR3YjFsazI5ZTZrYiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UwJe1Gc1yE92okFD7N/giphy.gif)
+
+[comment]: (./assets/screenshots/particle_3d.gif)
+
+
+**Composable Fractal Generation**: Support for four number systems (Complex, Dual, Perplex numbers, Quaternions) and combinable algorithms such as Picard-Mann iteration with biomorphic effects.
+
+<p float="left">
+  <img align="top" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNTJtY24yYjJoaDY5bjhzajg2b2lrNnlhZGdqcXk4b3A3eW8xMzN6NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/oKWj1QInSjgnolonqi/giphy-downsized-large.gif"  width="200" />
+  <img align="top" src="./assets/screenshots/complex_biomorph_combi.jpg "width="200" /> 
+  <img align="top" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExeHk4bjl2YmRpdG9oaHg0d2I1NjN5NGJ2eHZtaHh1MGl4Z2Zqam9ncyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/GkOsWMLuC26uSXYFA7/giphy.gif"  width="200" />
+  <img align="top" src="./assets/screenshots/fractal_quaternion_sinus.jpg "width="400" /> 
+</p>
+
 - **Parameter Exploration**: Bifurcation analysis for all features, offering deep dives into system dynamics.
+![An image showing a bifurcation diagram.](./assets/screenshots/bifurcation_zaslavskii_eps.jpg)
 - **Initial Condition Analysis**: A wide range of initial distributions to study the effects on system behavior.
 - **WASM Web Application**: Easily accessible web application with the option to compile natively across all platforms.
 
-
 ## Installation
 This project was tested with stable version ˋrustc 1.76.0ˋ of the Rust toolchain. Install it with `rustup install 1.76.0`.
-
-Sure, I can help you with that. Here's how you can extend the README with the information about how the app saves its state:
 
 ### Native
 For local testing on native platforms, execute `cargo run --release`. Linux users must install necessary libraries for `eframe` with:
