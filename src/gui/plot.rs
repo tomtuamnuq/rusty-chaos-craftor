@@ -5,6 +5,7 @@ mod plot_data;
 mod plot_data_variants;
 mod plot_styles;
 mod plot_utils;
+pub use self::plot_data::DEFAULT_MAX_SERIES;
 pub use plot_2_d::Plot2D;
 pub use plot_3_d::Plot3D;
 pub use plot_colors::SeriesColors;

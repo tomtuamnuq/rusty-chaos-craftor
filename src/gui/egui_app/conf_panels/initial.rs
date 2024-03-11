@@ -779,9 +779,9 @@ impl InitialPanel {
             }
         };
         let mode_num_samples = match self.init_mode {
-            InitialMode::States => 10_000 - self.num_state_dims() * 1000,
-            InitialMode::Particle => 4_000,
-            InitialMode::Fractals => 10_000,
+            InitialMode::States => 30_000 - self.num_state_dims() * 2000,
+            InitialMode::Particle => 5_000,
+            InitialMode::Fractals => 40_000,
         };
         mode_num_samples / mesh_control
     }
