@@ -142,7 +142,7 @@ impl PlotPanel {
                     integer_slider(
                         LABEL_NUM_SERIES,
                         &mut self.max_num_series,
-                        100,
+                        1000,
                         ui,
                         TIP_NUM_SERIES,
                     );

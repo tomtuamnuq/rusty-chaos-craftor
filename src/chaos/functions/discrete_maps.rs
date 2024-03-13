@@ -614,7 +614,7 @@ impl DiscreteMap for Shah {
         let (x, y, z) = (v[0], v[1], v[2]);
         v[0] = y + self.alpha * x.sin() + self.gamma * z.cos();
         v[1] = x + x.sin() * y.cos() + z.tan();
-        v[2] = x * t.sin() + y * t.cos() + self.beta * (z.powf(-self.delta)).atan();
+        v[2] = x * t.sin() + y * t.cos() + self.beta * z.atan() - self.delta;
     } // A three dimensional chaotic map and their applications to digital audio security paper by Shah et al. (with ranges)
       // initial state (0.0705, 0.00001, 0.0038) not working ?
 }
@@ -630,7 +630,7 @@ impl Default for Shah {
 }
 impl ChaosDescription for Shah {
     fn description(&self) -> String {
-        "'A three dimensional chaotic map and their applications to digital audio security'.".into()
+        "'A three dimensional chaotic map and their applications to digital audio security'. Try initial value (x=0.0705, y=0.00001, z=0.0038)".into()
     }
     fn reference(&self) -> &'static str {
         "https://doi.org/10.1007/s11042-021-10697-3"
@@ -641,7 +641,7 @@ impl ChaosFormula for Shah {
         &[
             "x= y + α sin(x) + γ cos(z)",
             "y= x + sin(x) cos(y) + tan(z)",
-            "z= x sin(t) + y cos(t) + β atanh(z^(-δ))",
+            "z= x sin(t) + y cos(t) + β atanh(z) - δ",
         ]
     }
 }
@@ -728,7 +728,7 @@ impl Default for Sfsimm {
 }
 impl ChaosDescription for Sfsimm {
     fn description(&self) -> String {
-        "'The New Four-Dimensional Fractional Chaotic Map with Constant and Variable-Order: Chaos, Control and Synchronization'. See the linked paper for a discussion of 'the dynamics of the discrete 4D sinusoidal feedback sine iterative chaotic map with infinite collapse (ICMIC) modulation map (SF-SIMM) with fractional-order'. Test the following initial state (x=0.5, y=0.5, z=0.99, w=0.99). Parameter p is the amplitude, b the frequency, and r an internal perturbation frequency.".into()
+        "'The New Four-Dimensional Fractional Chaotic Map with Constant and Variable-Order: Chaos, Control and Synchronization'. See the linked paper for a discussion of 'the dynamics of the discrete 4D sinusoidal feedback sine iterative chaotic map with infinite collapse (ICMIC) modulation map (SF-SIMM) with fractional-order'. Implemented is only the 4D discrete time SF-SIMM, see equation 10, and not the fractional order version. Test the following initial state (x=0.5, y=0.5, z=0.99, w=0.99). Parameter p is the amplitude, b the frequency, and r an internal perturbation frequency.".into()
     }
     fn reference(&self) -> &'static str {
         "https://doi.org/10.3390/math11204332"

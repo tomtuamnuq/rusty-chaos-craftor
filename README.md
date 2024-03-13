@@ -107,6 +107,6 @@ I would like to express my gratitude to the following authors and sources for pr
 
 ### Fractal Configurations and Algorithms
 - Paul Bourke for the probability, sinus, sinh, and zubieta Julia set generators, which are complex functions that produce fractal patterns based on the initial conditions. [Website](https://paulbourke.net/fractals/)
-- Li, Wang, and Chen for Algorithm 1 in *On the **quaternion** Julia sets via Picard–Mann iteration*. [Paper](https://doi.org/10.1007/s11071-023-08785-0)
-- Gdawiec, Fariello and Santos for Algorithm 3 in *A novel approach to generate Mandelbrot sets, Julia sets and **biomorphs** via viscosity approximation method*. [Paper](https://doi.org/10.1016/j.chaos.2022.112540)
+- Gdawiec, Fariello and Santos for Algorithm 1 in *On the **quaternion** Julia sets via Picard–Mann iteration*. [Paper](https://doi.org/10.1007/s11071-023-08785-0)
+- Kumari et al. for Algorithm 3 in *A novel approach to generate Mandelbrot sets, Julia sets and **biomorphs** via viscosity approximation method*. [Paper](https://doi.org/10.1016/j.chaos.2022.112540)
 - Bankers et al. for their work *Julia and Mandelbrot Sets for Dynamics over the Hyperbolic Numbers*, which motivated me to include **Perplex** numbers in this project. Perplex (also known as hyperbolic) numbers are a variation of complex numbers that encode geometric properties of the Minkowski space. [Paper](https://doi.org/10.3390/fractalfract3010006)
