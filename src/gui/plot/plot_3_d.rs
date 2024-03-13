@@ -354,7 +354,7 @@ impl Plot3D {
 
     fn reset_projections(&mut self) {
         let num_dims = self.number_of_dimensions();
-        let projection_color = if let Some(p) = self.get_parameter() {
+        let mut projection_color = if let Some(p) = self.get_parameter() {
             self.projection_x = StateProjection::Par(p);
             self.projection_y = StateProjection::S(0);
             self.projection_z = StateProjection::S(1);
@@ -379,6 +379,13 @@ impl Plot3D {
                 StateProjection::S(0)
             }
         };
+        // fix projection color for fractal mode to num iterations
+        if let DistributionDimensions::Fractal(fractal_mode) = self.dimensionality() {
+            projection_color = match fractal_mode {
+                FractalDimensions::Quaternion => StateProjection::S(4),
+                _ => StateProjection::S(2),
+            };
+        }
         self.set_projection_color(projection_color);
         self.selection_color = StateProjectionSelection::from(projection_color);
         self.selection_x = StateProjectionSelection::from(self.projection_x);

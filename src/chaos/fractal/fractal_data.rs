@@ -138,9 +138,9 @@ impl StateIndex for FractalQuaternion {
         match i {
             0 => self.z_0.w,
             1 => self.z_0.i,
-            2 => self.n as ChaosFloat,
-            3 => self.z_0.j,
-            4 => self.z_0.k,
+            2 => self.z_0.j,
+            3 => self.z_0.k,
+            4 => self.n as ChaosFloat,
             5 => self.z_n.w,
             6 => self.z_n.i,
             7 => self.z_n.j,
