@@ -66,6 +66,9 @@ pub const LABEL_PLOT2D_PAR_STATE_1: &str =
 pub const LABEL_PLOT2D_PAR_STATE_N: &str = "The state is visualized by the selected feature projection on the Y-Axis to produce a bifurcation diagram.";
 pub const LABEL_PLOT2D_PAR_FRACTAL: &str = "The color should represent the number of iterations. Interesting parameter values may be identified by colorful fractal projections. A 3D plot is better suited.";
 // 3D
+pub const LABEL_TOGGLE_PARAM: &str = "Show Parameters";
+pub const TIP_TOGGLE_PARAM: &str =
+    "Click to toggle between showing parameters on the X-Axis or State(s).";
 pub const LABEL_PLOT3D_STATE_1: &str = "A one-dimensional state S is plotted as S prev prev (X-Axis=S'') against S prev (Y-Axis=S') and S new (Z-Axis). Useful for discovering fixpoints or circles in the trajectory.";
 pub const LABEL_PLOT3D_STATE_2: &str = "A two-dimensional state S is plotted by a fixed assignment of S1 to Y and S2 to Z. The X-Axis shows time t for a specified trajectory length.";
 pub const LABEL_PLOT3D_PARTICLE: &str = "Particles are visualized by markers representing charge and parity. 'P' and 'N' mark positively or negatively charged ones. A cross marks anti-parity, meaning it will perform an inelastic collision with particles of a different parity (without a cross). Marker size can be modified by pointer-size for better visibility.";

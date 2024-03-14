@@ -15,7 +15,7 @@ use std::ops::Range;
 use super::plot_colors::{FromRGB, SeriesColorChoice, SeriesColors, RGB};
 use super::plot_data::PlotData;
 use super::plot_utils::{StateProjection, StateProjectionSelection, MAX_NUM_PROJECTIONS};
-
+use crate::gui::clickable_button;
 pub type Point3D = (ChaosFloat, ChaosFloat, ChaosFloat);
 pub type Points3D = Vec<Option<Point3D>>;
 type PlotData3D = PlotData<Point3D, RGBColor>;
@@ -550,43 +550,63 @@ impl Plot3D {
         let num_dims = dims.number_of_dimensions();
         let mut projection_vars_to_show = Vec::with_capacity(MAX_NUM_PROJECTIONS);
         let par = self.get_parameter();
-        if let Some(p) = par {
-            projection_vars_to_show.push(StateProjection::Par(p));
-        }
-        StateProjection::add_state_projection_vars(num_dims, &mut projection_vars_to_show);
-        let mut has_x_selected = false;
-        group_horizontal(ui, |ui| {
-            has_x_selected = StateProjection::projection_vars_selection(
-                "X",
-                self.projection_x.mode_string_choice(&dims),
-                &mut self.selection_x,
-                &projection_vars_to_show,
-                &dims,
-                ui,
-            );
-            if has_x_selected {
-                self.projection_x = if self.parameters_are_shown() {
-                    StateProjection::Par(par.unwrap())
-                } else {
-                    StateProjection::state(self.selection_x)
-                }
-            }
-        });
-        projection_vars_to_show.clear();
-        StateProjection::add_state_projection_vars(num_dims, &mut projection_vars_to_show);
-        let add_y_selector = if let DistributionDimensions::State(s) = dims {
-            if s <= 2 {
-                if has_x_selected {
-                    self.reset_data();
-                }
-                false
-            } else {
-                true
-            }
+        let add_x_selector = if let DistributionDimensions::State(s) = dims {
+            s > 2
         } else {
             true
         };
-        if add_y_selector {
+        if let Some(p) = par {
+            if add_x_selector {
+                projection_vars_to_show.push(StateProjection::Par(p));
+            } else {
+                let param_button_selected = self.parameters_are_shown();
+                if clickable_button(
+                    LABEL_TOGGLE_PARAM,
+                    param_button_selected,
+                    true,
+                    ui,
+                    TIP_TOGGLE_PARAM,
+                ) {
+                    self.reset_data();
+                    self.projection_x = if !param_button_selected {
+                        StateProjection::Par(p)
+                    } else {
+                        StateProjection::default() // not used since X-Axis is fixed
+                    };
+                    self.selection_x = StateProjectionSelection::from(self.projection_x);
+                }
+            }
+        }
+        if add_x_selector {
+            StateProjection::add_state_projection_vars(num_dims, &mut projection_vars_to_show);
+        }
+        if !projection_vars_to_show.is_empty() {
+            group_horizontal(ui, |ui| {
+                let has_x_selected = StateProjection::projection_vars_selection(
+                    "X",
+                    self.projection_x.mode_string_choice(&dims),
+                    &mut self.selection_x,
+                    &projection_vars_to_show,
+                    &dims,
+                    ui,
+                );
+                if has_x_selected {
+                    self.projection_x = if self.parameters_are_shown() {
+                        StateProjection::Par(par.unwrap())
+                    } else {
+                        StateProjection::state(self.selection_x)
+                    }
+                }
+                projection_vars_to_show.clear();
+            });
+        }
+        StateProjection::add_state_projection_vars(num_dims, &mut projection_vars_to_show);
+        let add_y_and_z_selector = if let DistributionDimensions::State(s) = dims {
+            s > 2 || (s == 2 && self.parameters_are_shown())
+        } else {
+            true
+        };
+        if add_y_and_z_selector {
             group_horizontal(ui, |ui| {
                 let has_y_selected = StateProjection::projection_vars_selection(
                     "Y",

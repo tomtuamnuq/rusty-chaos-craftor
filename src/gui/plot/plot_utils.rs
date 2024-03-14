@@ -90,9 +90,11 @@ impl StateProjection {
         match self {
             Self::Par(p) => format!("Par {p}"),
             Self::S(s) => match dims {
-                DistributionDimensions::State(_) => {
-                    format!("State {}", *s + 1)
-                }
+                DistributionDimensions::State(state) => match s.cmp(state) {
+                    Ordering::Less => format!("State{}", *s + 1),
+                    Ordering::Equal => String::from("Minimum"),
+                    Ordering::Greater => String::from("Maximum"),
+                },
                 DistributionDimensions::Particle(cartesian_dims) => match cartesian_dims {
                     2 => LABELS_PARTICLE_2D[*s].into(),
                     3 => LABELS_PARTICLE_3D[*s].into(),
