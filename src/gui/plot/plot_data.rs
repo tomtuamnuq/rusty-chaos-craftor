@@ -91,9 +91,6 @@ impl PlotDimensions {
     pub fn set_dimensionality(&mut self, dims: DistributionDimensions) {
         self.dimensions = dims;
     }
-    pub fn number_of_dimensions(&self) -> usize {
-        self.dimensions.number_of_dimensions()
-    }
 }
 
 type StyledSeries<P, C> = (Vec<Option<P>>, Vec<Style<C>>);
@@ -174,7 +171,6 @@ impl<P, C> PlotData<P, C> {
             pub fn get_parameter_values(&self) -> &Vec<f64>;
             pub fn dimensionality(&self) -> &DistributionDimensions;
             pub fn set_dimensionality(&mut self, dims: DistributionDimensions);
-            pub fn number_of_dimensions(&self) -> usize;
         }
         to self.point_holder{
             pub fn num_series(&self) -> usize;

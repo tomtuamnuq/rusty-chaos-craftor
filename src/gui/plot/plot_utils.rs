@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use crate::{
     chaos::{data::*, labels::*},
     gui::combo_box_from_string,
@@ -109,9 +111,11 @@ impl StateProjection {
         match self {
             Self::Par(p) => String::from(*p),
             Self::S(s) => match dims {
-                DistributionDimensions::State(_) => {
-                    format!("S{}", *s + 1)
-                }
+                DistributionDimensions::State(state) => match s.cmp(state) {
+                    Ordering::Less => format!("S{}", *s + 1),
+                    Ordering::Equal => String::from("Min"),
+                    Ordering::Greater => String::from("Max"),
+                },
                 DistributionDimensions::Particle(cartesian_dims) => match cartesian_dims {
                     2 => LABELS_SHORT_PARTICLE_2D[*s].into(),
                     3 => LABELS_SHORT_PARTICLE_3D[*s].into(),

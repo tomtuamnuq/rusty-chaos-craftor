@@ -353,39 +353,46 @@ impl Plot3D {
     }
 
     fn reset_projections(&mut self) {
-        let num_dims = self.number_of_dimensions();
-        let mut projection_color = if let Some(p) = self.get_parameter() {
-            self.projection_x = StateProjection::Par(p);
-            self.projection_y = StateProjection::S(0);
-            self.projection_z = StateProjection::S(1);
-            if num_dims > 2 {
-                StateProjection::S(2)
-            } else if num_dims > 1 {
-                StateProjection::S(1)
-            } else {
-                StateProjection::S(0)
-            }
-        } else {
-            self.projection_x = StateProjection::S(0);
-            self.projection_y = StateProjection::S(1);
-            self.projection_z = StateProjection::S(2);
-            if num_dims > 3 {
-                StateProjection::S(3)
-            } else if num_dims > 2 {
-                StateProjection::S(2)
-            } else if num_dims > 1 {
-                StateProjection::S(1)
-            } else {
-                StateProjection::S(0)
-            }
-        };
-        // fix projection color for fractal mode to num iterations
-        if let DistributionDimensions::Fractal(fractal_mode) = self.dimensionality() {
-            projection_color = match fractal_mode {
-                FractalDimensions::Quaternion => StateProjection::S(4),
-                _ => StateProjection::S(2),
+        let projection_color;
+        let (projection_x, projection_y, projection_z);
+        if let Some(p) = self.get_parameter() {
+            projection_x = StateProjection::Par(p);
+            projection_y = StateProjection::S(0);
+            projection_z = StateProjection::S(1);
+            projection_color = match self.dimensionality() {
+                DistributionDimensions::State(s) => {
+                    match s {
+                        0 | 1 => StateProjection::S(0),
+                        _ => StateProjection::S(*s + 1), // maximum
+                    }
+                }
+                DistributionDimensions::Particle(s) => StateProjection::S(2 * s + 2), // color mass
+                DistributionDimensions::Fractal(fractal_mode) => match fractal_mode {
+                    FractalDimensions::Quaternion => StateProjection::S(4),
+                    _ => StateProjection::S(2),
+                },
             };
+        } else {
+            projection_x = StateProjection::S(0);
+            projection_y = StateProjection::S(1);
+            projection_z = StateProjection::S(2);
+            projection_color = match self.dimensionality() {
+                DistributionDimensions::State(s) => {
+                    match s {
+                        0 | 1 => StateProjection::S(0),
+                        _ => StateProjection::S(*s + 1), // maximum
+                    }
+                }
+                DistributionDimensions::Particle(s) => StateProjection::S(2 * s + 2), // color mass
+                DistributionDimensions::Fractal(fractal_mode) => match fractal_mode {
+                    FractalDimensions::Quaternion => StateProjection::S(4),
+                    _ => StateProjection::S(2),
+                },
+            }
         }
+        self.projection_x = projection_x;
+        self.projection_y = projection_y;
+        self.projection_z = projection_z;
         self.set_projection_color(projection_color);
         self.selection_color = StateProjectionSelection::from(projection_color);
         self.selection_x = StateProjectionSelection::from(self.projection_x);
@@ -476,24 +483,23 @@ impl Plot3D {
 
     fn set_axis_labels(&mut self) {
         let dims = self.dimensionality().clone();
-        let num_dims = dims.number_of_dimensions();
         if self.parameters_are_shown() {
             self.set_x_label(
                 self.get_parameter()
                     .expect("Parameter exists if projection is Par"),
             );
-            if num_dims == 1 {
+            if let DistributionDimensions::State(1) = dims {
                 self.set_y_label("t");
                 self.set_z_label("S1");
             } else {
                 self.set_y_label(self.projection_y.mode_string_axis(&dims));
                 self.set_z_label(self.projection_z.mode_string_axis(&dims));
             }
-        } else if num_dims == 1 {
+        } else if let DistributionDimensions::State(1) = dims {
             self.set_x_label("S''");
             self.set_y_label("S'");
             self.set_z_label("S");
-        } else if num_dims == 2 {
+        } else if let DistributionDimensions::State(2) = dims {
             self.set_x_label("t");
             self.set_y_label("S1");
             self.set_z_label("S2");
@@ -568,7 +574,19 @@ impl Plot3D {
         });
         projection_vars_to_show.clear();
         StateProjection::add_state_projection_vars(num_dims, &mut projection_vars_to_show);
-        if num_dims > 2 {
+        let add_y_selector = if let DistributionDimensions::State(s) = dims {
+            if s <= 2 {
+                if has_x_selected {
+                    self.reset_data();
+                }
+                false
+            } else {
+                true
+            }
+        } else {
+            true
+        };
+        if add_y_selector {
             group_horizontal(ui, |ui| {
                 let has_y_selected = StateProjection::projection_vars_selection(
                     "Y",
@@ -595,8 +613,6 @@ impl Plot3D {
                     self.projection_z = StateProjection::state(self.selection_z);
                 }
             });
-        } else if has_x_selected {
-            self.reset_data();
         }
         if let Some(p) = par {
             projection_vars_to_show.push(StateProjection::Par(p));
@@ -677,7 +693,6 @@ impl Plot3D {
     delegate! {
         to self.series_holder(){
             pub fn dimensionality(&self) -> &DistributionDimensions;
-            pub fn number_of_dimensions(&self) -> usize;
             pub fn get_parameter(&self) -> Option<&'static str>;
             pub fn get_parameter_values(&self) -> &Vec<f64>;
             pub fn with_parameter(&self)->bool;
