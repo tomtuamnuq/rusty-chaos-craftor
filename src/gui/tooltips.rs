@@ -66,6 +66,9 @@ pub const LABEL_PLOT2D_PAR_STATE_1: &str =
 pub const LABEL_PLOT2D_PAR_STATE_N: &str = "The state is visualized by the selected feature projection on the Y-Axis to produce a bifurcation diagram.";
 pub const LABEL_PLOT2D_PAR_FRACTAL: &str = "The color should represent the number of iterations. Interesting parameter values may be identified by colorful fractal projections. A 3D plot is better suited.";
 // 3D
+pub const TIP_TOGGLE_FIX_BOUNDS: &str =
+    "Toggle between auto-range (Min and Max are calculated per dimension) and a fixed cube with interval [Min, Max] on each side.";
+
 pub const LABEL_TOGGLE_PARAM: &str = "Show Parameters";
 pub const TIP_TOGGLE_PARAM: &str =
     "Click to toggle between showing parameters on the X-Axis or State(s).";

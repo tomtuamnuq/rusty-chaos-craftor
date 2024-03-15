@@ -16,6 +16,7 @@ use super::plot_colors::{FromRGB, SeriesColorChoice, SeriesColors, RGB};
 use super::plot_data::PlotData;
 use super::plot_utils::{StateProjection, StateProjectionSelection, MAX_NUM_PROJECTIONS};
 use crate::gui::clickable_button;
+const DRAG_BOUND_MAX: f64 = 2000.0;
 pub type Point3D = (ChaosFloat, ChaosFloat, ChaosFloat);
 pub type Points3D = Vec<Option<Point3D>>;
 type PlotData3D = PlotData<Point3D, RGBColor>;
@@ -40,6 +41,9 @@ impl Default for AxisData {
 #[derive(Clone, Copy, PartialEq, Deserialize, Serialize)]
 #[serde(default)]
 struct Options3D {
+    pub fix_bounds: bool,
+    pub bound_left: f64,
+    pub bound_right: f64,
     pub point_size: f64,
     pub point_opacity: f64,
     pub show_particle_radius: bool,
@@ -48,6 +52,9 @@ struct Options3D {
 impl Default for Options3D {
     fn default() -> Self {
         Self {
+            fix_bounds: false,
+            bound_left: -1.0,
+            bound_right: 1.0,
             point_size: 1.0,
             point_opacity: 1.0,
             show_particle_radius: true,
@@ -204,7 +211,18 @@ fn plot_data(chart: Chart3D<'_, '_>, series_holder: &PlotData3D, options: &Optio
         DistributionDimensions::Fractal(_) => plot_fractal(chart, series_holder, options),
     };
 }
-
+fn get_fixed_ranges(
+    bound_left: f64,
+    bound_right: f64,
+) -> (Range<ChaosFloat>, Range<ChaosFloat>, Range<ChaosFloat>) {
+    let bound_min = bound_left.min(bound_right);
+    let bound_max = bound_left.max(bound_right);
+    let range = Range {
+        start: bound_min,
+        end: bound_max,
+    };
+    (range.clone(), range.clone(), range)
+}
 fn get_ranges_from_extrema(
     plot_data: &PlotData3D,
 ) -> (Range<ChaosFloat>, Range<ChaosFloat>, Range<ChaosFloat>) {
@@ -246,7 +264,11 @@ impl Default for Chart3DWithData {
         .pitch(0.15)
         .scale(0.9)
         .builder_cb(Box::new(|area, transform, data| {
-            let (x_range, y_range, z_range) = get_ranges_from_extrema(&data.0);
+            let (x_range, y_range, z_range) = if data.2.fix_bounds {
+                get_fixed_ranges(data.2.bound_left, data.2.bound_right)
+            } else {
+                get_ranges_from_extrema(&data.0)
+            };
             let chart_build_res = ChartBuilder::on(area)
                 .margin(10)
                 .build_cartesian_3d(x_range, y_range, z_range);
@@ -658,6 +680,29 @@ impl Plot3D {
             }
         });
         let options = self.options_mut();
+        group_horizontal(ui, |ui| {
+            add_checkbox(
+                "Fix bounds",
+                &mut options.fix_bounds,
+                ui,
+                TIP_TOGGLE_FIX_BOUNDS,
+            );
+            if options.fix_bounds {
+                ui.add(
+                    egui::DragValue::new(&mut options.bound_left)
+                        .speed(1.0)
+                        .clamp_range(-DRAG_BOUND_MAX..=DRAG_BOUND_MAX)
+                        .suffix(" Min"),
+                );
+                ui.add(
+                    egui::DragValue::new(&mut options.bound_right)
+                        .speed(1.0)
+                        .clamp_range(-DRAG_BOUND_MAX..=DRAG_BOUND_MAX)
+                        .suffix(" Max"),
+                );
+            }
+        });
+
         group_horizontal(ui, |ui| {
             float_slider(
                 LABEL_POINT_SIZE,
