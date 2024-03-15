@@ -34,9 +34,10 @@ jobs:
         # this is necessary for github pages where the site is deployed to username.github.io/repo_name and all files must be requested
         # relatively as eframe_template/favicon.ico. if we skip public-url option, the href paths will instead request username.github.io/favicon.ico which
         # will obviously return error 404 not found.
-        # causes problems with the path resolution see https://github.com/emilk/eframe_template/issues/116
+        # worked with trunk v.0.18.8
+        # problems since trunk v0.19 https://github.com/trunk-rs/trunk/commit/391be74c74c320b3f01bf353d18bfc854d62bb85 - path resolution see https://github.com/emilk/eframe_template/issues/116
         # run: ./trunk build --release --public-url "${GITHUB_REPOSITORY#*/}"
-        run: ./trunk build --release 
+        run: ./trunk build --release --public-url https://tomtuamnuq.github.io/rusty-chaos-craftor/ 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
