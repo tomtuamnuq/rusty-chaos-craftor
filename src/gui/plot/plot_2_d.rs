@@ -77,11 +77,13 @@ impl Plot2D {
     }
 
     fn reset_projections(&mut self) {
-        let dim = self.number_of_dimensions();
-        let projection_color = if let Some(p) = self.plot_data.get_parameter() {
+        let dim = self.plot_data.dimensionality();
+        let num_dims = dim.number_of_dimensions();
+        // set projections based on whether a parameter is currently visualized or not
+        let mut projection_color = if let Some(p) = self.plot_data.get_parameter() {
             self.projection_x = StateProjection::Par(p);
             self.projection_y = StateProjection::S(0);
-            if dim > 1 {
+            if num_dims > 1 {
                 StateProjection::S(1)
             } else {
                 StateProjection::S(0)
@@ -89,12 +91,19 @@ impl Plot2D {
         } else {
             self.projection_x = StateProjection::S(0);
             self.projection_y = StateProjection::S(1);
-            if dim > 2 {
+            if num_dims > 2 {
                 StateProjection::S(2)
             } else {
                 StateProjection::S(0)
             }
         };
+        // fix projection color for fractal mode to num iterations
+        if let DistributionDimensions::Fractal(fractal_mode) = dim {
+            projection_color = match fractal_mode {
+                FractalDimensions::Quaternion => StateProjection::S(4),
+                _ => StateProjection::S(2),
+            };
+        }
         self.plot_data.set_projection_color(projection_color);
         self.selection_color = StateProjectionSelection::from(projection_color);
         self.selection_x = StateProjectionSelection::from(self.projection_x);
@@ -480,7 +489,6 @@ impl Plot2D {
     delegate! {
         to self.plot_data{
             pub fn series_color_mut(&mut self)-> &mut SeriesColorChoice;
-            pub fn number_of_dimensions(&self) -> usize;
             pub fn get_parameter_values(&self) -> &Vec<f64>;
             #[call(clear)]
             pub fn reset_data(&mut self);

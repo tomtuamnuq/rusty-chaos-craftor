@@ -221,7 +221,8 @@ impl ChaosApp {
         ui.vertical(|ui| {
             match self.open_main_panel {
                 MainPanel::ChaoticPlot => {
-                    self.plot_panel.conf_ui(ui);
+                    self.plot_panel
+                        .conf_ui(self.chaos_controller.dimensionality(), ui);
                 }
                 MainPanel::Benchmark => {
                     self.benchmark_panel

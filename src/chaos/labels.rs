@@ -74,9 +74,9 @@ pub const LABELS_PERPLEX: [&str; NUM_DIMS_FRACTALPERPLEX] = [
 pub const LABELS_QUATERNION: [&str; NUM_DIMS_FRACTALQUATERNION] = [
     "c w",
     "c i",
-    "fractal iteration",
     "c j",
     "c k",
+    "fractal iteration",
     "z w",
     "z i",
     "z j",
@@ -88,5 +88,5 @@ pub const LABELS_SHORT_DUAL: [&str; NUM_DIMS_FRACTALDUAL] = ["c re", "c ε", "it
 pub const LABELS_SHORT_PERPLEX: [&str; NUM_DIMS_FRACTALPERPLEX] =
     ["c t", "c x", "iter", "z t", "z x"];
 pub const LABELS_SHORT_QUATERNION: [&str; NUM_DIMS_FRACTALQUATERNION] = [
-    "c w", "c i", "iter", "c j", "c k", "z w", "z i", "z j", "z k",
+    "c w", "c i", "c j", "c k", "iter", "z w", "z i", "z j", "z k",
 ];

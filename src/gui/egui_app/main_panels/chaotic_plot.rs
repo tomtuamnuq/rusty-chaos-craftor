@@ -1,4 +1,4 @@
-use crate::chaos::data::ChaosDataVec;
+use crate::chaos::data::{ChaosDataVec, DistributionDimensions};
 use crate::gui::plot::*;
 use crate::gui::tooltips::*;
 use crate::gui::*;
@@ -23,7 +23,6 @@ pub struct PlotPanel {
     timer: Timer,
 }
 
-const DEFAULT_NUM_SERIES: usize = 20;
 impl Default for PlotPanel {
     fn default() -> Self {
         Self {
@@ -33,10 +32,10 @@ impl Default for PlotPanel {
             plot_3_d: Default::default(),
             plot_backend: Default::default(),
             save_trajectory: true,
-            max_num_series: DEFAULT_NUM_SERIES,
-            last_max_num_series: DEFAULT_NUM_SERIES,
+            max_num_series: DEFAULT_MAX_SERIES,
+            last_max_num_series: DEFAULT_MAX_SERIES,
             point_colormap: Default::default(),
-            frame_rate: 10,
+            frame_rate: 30,
             timer: Default::default(),
         }
     }
@@ -79,7 +78,7 @@ impl PlotPanel {
         self.timer.check_elapsed()
     }
 
-    fn add_general_plot_options(&mut self, ui: &mut Ui) {
+    fn add_general_plot_options(&mut self, dims: DistributionDimensions, ui: &mut Ui) {
         ui.horizontal(|ui| {
             if combo_box(
                 LABEL_PLOT_BACKEND,
@@ -111,37 +110,45 @@ impl PlotPanel {
             if integer_slider(
                 LABEL_NUM_FRAMES,
                 &mut self.frame_rate,
-                50,
+                60,
                 ui,
                 TIP_NUM_FRAMES,
             ) {
                 self.timer.set_frequency(self.frame_rate as f64);
             };
         });
-        ui.horizontal(|ui| {
-            if add_checkbox(
-                LABEL_TRAJECTORY,
-                &mut self.save_trajectory,
-                ui,
-                TIP_TRAJECTORY,
-            ) {
-                if !self.save_trajectory {
-                    self.last_max_num_series = self.max_num_series;
-                    self.max_num_series = 1;
-                } else {
-                    self.max_num_series = self.last_max_num_series;
-                }
-            }
+        if let DistributionDimensions::Fractal(_) = dims {
             if self.save_trajectory {
-                integer_slider(
-                    LABEL_NUM_SERIES,
-                    &mut self.max_num_series,
-                    100,
-                    ui,
-                    TIP_NUM_SERIES,
-                );
+                self.last_max_num_series = self.max_num_series;
+                self.save_trajectory = false;
+                self.max_num_series = 1;
             }
-        });
+        } else {
+            ui.horizontal(|ui| {
+                if add_checkbox(
+                    LABEL_TRAJECTORY,
+                    &mut self.save_trajectory,
+                    ui,
+                    TIP_TRAJECTORY,
+                ) {
+                    if !self.save_trajectory {
+                        self.last_max_num_series = self.max_num_series;
+                        self.max_num_series = 1;
+                    } else {
+                        self.max_num_series = self.last_max_num_series;
+                    }
+                }
+                if self.save_trajectory {
+                    integer_slider(
+                        LABEL_NUM_SERIES,
+                        &mut self.max_num_series,
+                        1000,
+                        ui,
+                        TIP_NUM_SERIES,
+                    );
+                }
+            });
+        }
         ui.horizontal(|ui| {
             combo_box(LABEL_COLORMAP, &mut self.point_colormap, ui, TIP_COLORMAP);
         });
@@ -154,10 +161,10 @@ impl PlotPanel {
         });
     }
 
-    pub fn conf_ui(&mut self, ui: &mut Ui) {
+    pub fn conf_ui(&mut self, dims: DistributionDimensions, ui: &mut Ui) {
         group_vertical(ui, |ui| {
             ui.heading("Plot Configuration");
-            self.add_general_plot_options(ui);
+            self.add_general_plot_options(dims, ui);
         });
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.collapsing("Plot Visualization Info", |ui| {

@@ -1,5 +1,6 @@
 use ode_solvers::{Vector1, Vector2, Vector3, Vector4, Vector5, Vector6};
 use paste::paste;
+use std::cmp::Ordering;
 use strum_macros::IntoStaticStr;
 pub type ChaosFloat = f64;
 pub type Complex = nalgebra::Complex<ChaosFloat>;
@@ -59,7 +60,12 @@ pub const NUM_DIMS_FRACTALQUATERNION: usize = 9;
 impl DistributionDimensions {
     pub fn number_of_dimensions(&self) -> usize {
         match self {
-            DistributionDimensions::State(n) => *n,
+            DistributionDimensions::State(n) => {
+                match n {
+                    0 | 1 => *n,
+                    _ => *n + 2, // number of states + min + max
+                }
+            }
             DistributionDimensions::Particle(n) => *n * 2 + 4, // cartesian coordinates for pos and vel + parity, mass and charge + radius
             DistributionDimensions::Fractal(d) => match d {
                 FractalDimensions::Complex => 5,
@@ -93,6 +99,19 @@ pub const DIMS_FRACTALPERPLEX: DistributionDimensions =
     DistributionDimensions::Fractal(FractalDimensions::Perplex);
 pub const DIMS_FRACTALQUATERNION: DistributionDimensions =
     DistributionDimensions::Fractal(FractalDimensions::Quaternion);
+pub type State1 = Vector1<ChaosFloat>;
+pub const DIMS_STATE1: DistributionDimensions = DistributionDimensions::State(1);
+impl StateIndex for State1 {
+    fn ind(&self, _i: usize) -> ChaosFloat {
+        self[0]
+    }
+}
+impl ValidStateCheck for State1 {
+    fn is_valid(&self) -> bool {
+        is_valid_number(&self[0])
+    }
+}
+
 macro_rules! impl_state_traits_and_dims {
     ($($variant:expr),*) => {
         paste!{
@@ -102,7 +121,11 @@ macro_rules! impl_state_traits_and_dims {
                 pub const [<DIMS_STATE $variant>]: DistributionDimensions = DistributionDimensions::State($variant);
                 impl StateIndex for [<State $variant>] {
                     fn ind(&self, i: usize) -> ChaosFloat {
-                        self[i]
+                        match i.cmp(& $variant){
+                            Ordering::Less => self[i],
+                            Ordering::Equal => self.min(),
+                            Ordering::Greater => self.max()
+                        }
                     }
                 }
                 impl ValidStateCheck for [<State $variant>] {
@@ -116,7 +139,7 @@ macro_rules! impl_state_traits_and_dims {
 }
 
 impl_state_traits_and_dims! {
-    1, 2, 3, 4, 5, 6
+    2, 3, 4, 5, 6
 }
 
 impl FromStateVec for State1 {

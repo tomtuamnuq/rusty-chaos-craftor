@@ -54,7 +54,7 @@ generate_chaotic_function_configs! {
     KaplanYorke no_check { alpha: (ChaosFloat::NEG_INFINITY, ChaosFloat::INFINITY) },
     Rulkov no_check { alpha: (0.0, 10.0), mu: (0.0, 0.1), delta: (ChaosFloat::NEG_INFINITY, ChaosFloat::INFINITY) },
     Zaslavskii check_zaslavskii { eps: (ChaosFloat::NEG_INFINITY, ChaosFloat::INFINITY), nu: (ChaosFloat::NEG_INFINITY, ChaosFloat::INFINITY), r: (0.0, ChaosFloat::INFINITY), mu: (ChaosFloat::NEG_INFINITY, ChaosFloat::INFINITY) },
-    Shah no_check { alpha: (5.0, ChaosFloat::INFINITY), beta: (-10.0, 10.0), gamma: (-1.0, 1.0), delta: (-1.0, 1.0) },
+    Shah no_check { alpha: (ChaosFloat::NEG_INFINITY, ChaosFloat::INFINITY), beta: (-10.0, 10.0), gamma: (-1.0, 1.0), delta: (-1.0, 1.0) },
     Memristive no_check { k: (-10.0, 10.0), a: (-10.0, 10.0) },
     Sfsimm no_check { p: (ChaosFloat::NEG_INFINITY, ChaosFloat::INFINITY), b: (0.0, 2.0*PI), r: (0.0, 2.0*PI) },
     MandelbrotPowerComplex no_check { r: (0.0, ChaosFloat::INFINITY), n: (ChaosFloat::NEG_INFINITY, ChaosFloat::INFINITY)  },

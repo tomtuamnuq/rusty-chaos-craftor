@@ -1,6 +1,5 @@
 use ode_solvers::dop853::Dop853;
 use ode_solvers::dop_shared::IntegrationError as Error;
-use ode_solvers::Dopri5;
 use ode_solvers::Rk4;
 use ode_solvers::System;
 use rand::{thread_rng, Rng};
@@ -178,17 +177,11 @@ macro_rules! implement_integrator_Dop853 {
                         1e-2,
                         1e-2,
                     );
-                    match stepper.integrate() {
-                        Ok(_) => {
-                            let mut iter = stepper.y_out().to_owned().into_iter();
-                            iter.next();
-                            Ok(iter)
-                        }
-                        Err(e) => {
-                            Err(e)
-                        }
-                    }
-                }
+                    stepper.integrate()?;
+                    let mut iter = stepper.y_out().to_owned().into_iter();
+                    iter.next();
+                    Ok(iter)
+               }
             }
         )*
     };
@@ -201,7 +194,8 @@ implement_integrator_Rk4! {
     ChuasCircuit, State3,
     GenesioTesi, State3,
     BurkeShaw, State3,
-    Rikitake, State3
+    Rikitake, State3,
+    WeiWang, State4
 }
 implement_integrator_Dop853! {
     Brusselator, State2,
@@ -527,7 +521,7 @@ impl Default for GenesioTesi {
 }
 impl ChaosDescription for GenesioTesi {
     fn description(&self) -> String {
-        "See the paper 'Design, Analysis of the GenesioTest Chaotic System and its Electronic Experimental Implemenation'.".into()
+        "See the paper 'Design, Analysis of the Genesio Tesi Chaotic System and its Electronic Experimental Implemenation'.".into()
     }
     fn reference(&self) -> &'static str {
         "https://www.researchgate.net/publication/303369826_Design_analysis_of_the_Genesio-Tesi_chaotic_system_and_its_electronic_experimental_implementation"
@@ -722,23 +716,19 @@ impl Integrator for Ababneh {
     type Input = State4;
     type Output = State4;
     fn integrate(&self, y0: &State4) -> Result<IntoIter<State4>, Error> {
-        let mut stepper = Dopri5::new(
+        let mut stepper = Dop853::new(
             self.clone(),
             0.0,
             self.integration_time(),
             1e-1,
             y0.to_owned(),
-            0.25,
-            0.25,
+            1e-1,
+            1e-1,
         );
-        match stepper.integrate() {
-            Ok(_) => {
-                let mut iter = stepper.y_out().to_owned().into_iter();
-                iter.next();
-                Ok(iter)
-            }
-            Err(e) => Err(e),
-        }
+        stepper.integrate()?;
+        let mut iter = stepper.y_out().to_owned().into_iter();
+        iter.next();
+        Ok(iter)
     }
 }
 
@@ -774,33 +764,8 @@ impl System<Time, State4> for WeiWang {
         dy[2] = self.d - (x * y).exp();
         dy[3] = self.c * z * w;
     } // A new four dimensional chaotic system and its circuit implementation paper by Wang with defaults
-      // initital values (1, -3, 0.1, 7) unstable...
+      // initital values (1, -3, -0.1, 7)
 }
-
-impl Integrator for WeiWang {
-    type Input = State4;
-    type Output = State4;
-    fn integrate(&self, y0: &State4) -> Result<IntoIter<State4>, Error> {
-        let mut stepper = Dop853::new(
-            self.clone(),
-            0.0,
-            self.integration_time(),
-            1e-1,
-            y0.to_owned(),
-            1e-2,
-            1e-2,
-        );
-        match stepper.integrate() {
-            Ok(_) => {
-                let mut iter = stepper.y_out().to_owned().into_iter();
-                iter.next();
-                Ok(iter)
-            }
-            Err(e) => Err(e),
-        }
-    }
-}
-
 impl Default for WeiWang {
     fn default() -> Self {
         Self {
@@ -814,7 +779,7 @@ impl Default for WeiWang {
 }
 impl ChaosDescription for WeiWang {
     fn description(&self) -> String {
-        "See 'A new four dimensional chaotic system and its circuit implementation' paper by Wang."
+        "See 'A new four dimensional chaotic system and its circuit implementation' paper by Wang. Test initial value (x=1.0, y=-3.0, z=-0.1, w=7.0)"
             .into()
     }
     fn reference(&self) -> &'static str {
@@ -858,5 +823,51 @@ mod tests {
         );
         let w = chaos_data.data()[1];
         assert_eq!(v, w, "Both states should be changed deterministically!");
+    }
+    #[test]
+    fn test_ababneh() {
+        let num_points = 1;
+        let (x, y, z, w) = (1.0, 1.0, 1.0, 1.0);
+        let distr = vec![
+            InitialDistributionVariant::Fixed(Fixed { value: x }),
+            InitialDistributionVariant::Fixed(Fixed { value: y }),
+            InitialDistributionVariant::Fixed(Fixed { value: z }),
+            InitialDistributionVariant::Fixed(Fixed { value: w }),
+        ];
+        let mut chaos_data = ChaosData::<State4>::new(num_points, &distr);
+        let system = Ababneh::default();
+        let mut solver = OdeSolver::new(system);
+        let data = chaos_data.data_mut();
+        solver.initial_states(data);
+        solver.execute(data, 100);
+        let v = chaos_data.data()[0];
+        assert_ne!(
+            v.expect("Should not be None"),
+            State4::new(x, y, z, w),
+            "State should has changed!"
+        );
+    }
+    #[test]
+    fn test_weiwang() {
+        let num_points = 1;
+        let (x, y, z, w) = (1.0, -3.0, -0.1, 7.0);
+        let distr = vec![
+            InitialDistributionVariant::Fixed(Fixed { value: x }),
+            InitialDistributionVariant::Fixed(Fixed { value: y }),
+            InitialDistributionVariant::Fixed(Fixed { value: z }),
+            InitialDistributionVariant::Fixed(Fixed { value: w }),
+        ];
+        let mut chaos_data = ChaosData::<State4>::new(num_points, &distr);
+        let system = WeiWang::default();
+        let mut solver = OdeSolver::new(system);
+        let data = chaos_data.data_mut();
+        solver.initial_states(data);
+        solver.execute(data, 10);
+        let v = chaos_data.data()[0];
+        assert_ne!(
+            v.expect("Should not be None"),
+            State4::new(x, y, z, w),
+            "State should has changed!"
+        );
     }
 }

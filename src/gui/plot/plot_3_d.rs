@@ -15,7 +15,8 @@ use std::ops::Range;
 use super::plot_colors::{FromRGB, SeriesColorChoice, SeriesColors, RGB};
 use super::plot_data::PlotData;
 use super::plot_utils::{StateProjection, StateProjectionSelection, MAX_NUM_PROJECTIONS};
-
+use crate::gui::clickable_button;
+const DRAG_BOUND_MAX: f64 = 2000.0;
 pub type Point3D = (ChaosFloat, ChaosFloat, ChaosFloat);
 pub type Points3D = Vec<Option<Point3D>>;
 type PlotData3D = PlotData<Point3D, RGBColor>;
@@ -40,6 +41,9 @@ impl Default for AxisData {
 #[derive(Clone, Copy, PartialEq, Deserialize, Serialize)]
 #[serde(default)]
 struct Options3D {
+    pub fix_bounds: bool,
+    pub bound_left: f64,
+    pub bound_right: f64,
     pub point_size: f64,
     pub point_opacity: f64,
     pub show_particle_radius: bool,
@@ -48,6 +52,9 @@ struct Options3D {
 impl Default for Options3D {
     fn default() -> Self {
         Self {
+            fix_bounds: false,
+            bound_left: -1.0,
+            bound_right: 1.0,
             point_size: 1.0,
             point_opacity: 1.0,
             show_particle_radius: true,
@@ -204,7 +211,18 @@ fn plot_data(chart: Chart3D<'_, '_>, series_holder: &PlotData3D, options: &Optio
         DistributionDimensions::Fractal(_) => plot_fractal(chart, series_holder, options),
     };
 }
-
+fn get_fixed_ranges(
+    bound_left: f64,
+    bound_right: f64,
+) -> (Range<ChaosFloat>, Range<ChaosFloat>, Range<ChaosFloat>) {
+    let bound_min = bound_left.min(bound_right);
+    let bound_max = bound_left.max(bound_right);
+    let range = Range {
+        start: bound_min,
+        end: bound_max,
+    };
+    (range.clone(), range.clone(), range)
+}
 fn get_ranges_from_extrema(
     plot_data: &PlotData3D,
 ) -> (Range<ChaosFloat>, Range<ChaosFloat>, Range<ChaosFloat>) {
@@ -246,7 +264,11 @@ impl Default for Chart3DWithData {
         .pitch(0.15)
         .scale(0.9)
         .builder_cb(Box::new(|area, transform, data| {
-            let (x_range, y_range, z_range) = get_ranges_from_extrema(&data.0);
+            let (x_range, y_range, z_range) = if data.2.fix_bounds {
+                get_fixed_ranges(data.2.bound_left, data.2.bound_right)
+            } else {
+                get_ranges_from_extrema(&data.0)
+            };
             let chart_build_res = ChartBuilder::on(area)
                 .margin(10)
                 .build_cartesian_3d(x_range, y_range, z_range);
@@ -353,32 +375,46 @@ impl Plot3D {
     }
 
     fn reset_projections(&mut self) {
-        let num_dims = self.number_of_dimensions();
-        let projection_color = if let Some(p) = self.get_parameter() {
-            self.projection_x = StateProjection::Par(p);
-            self.projection_y = StateProjection::S(0);
-            self.projection_z = StateProjection::S(1);
-            if num_dims > 2 {
-                StateProjection::S(2)
-            } else if num_dims > 1 {
-                StateProjection::S(1)
-            } else {
-                StateProjection::S(0)
-            }
+        let projection_color;
+        let (projection_x, projection_y, projection_z);
+        if let Some(p) = self.get_parameter() {
+            projection_x = StateProjection::Par(p);
+            projection_y = StateProjection::S(0);
+            projection_z = StateProjection::S(1);
+            projection_color = match self.dimensionality() {
+                DistributionDimensions::State(s) => {
+                    match s {
+                        0 | 1 => StateProjection::S(0),
+                        _ => StateProjection::S(*s + 1), // maximum
+                    }
+                }
+                DistributionDimensions::Particle(s) => StateProjection::S(2 * s + 2), // color mass
+                DistributionDimensions::Fractal(fractal_mode) => match fractal_mode {
+                    FractalDimensions::Quaternion => StateProjection::S(4),
+                    _ => StateProjection::S(2),
+                },
+            };
         } else {
-            self.projection_x = StateProjection::S(0);
-            self.projection_y = StateProjection::S(1);
-            self.projection_z = StateProjection::S(2);
-            if num_dims > 3 {
-                StateProjection::S(3)
-            } else if num_dims > 2 {
-                StateProjection::S(2)
-            } else if num_dims > 1 {
-                StateProjection::S(1)
-            } else {
-                StateProjection::S(0)
+            projection_x = StateProjection::S(0);
+            projection_y = StateProjection::S(1);
+            projection_z = StateProjection::S(2);
+            projection_color = match self.dimensionality() {
+                DistributionDimensions::State(s) => {
+                    match s {
+                        0 | 1 => StateProjection::S(0),
+                        _ => StateProjection::S(*s + 1), // maximum
+                    }
+                }
+                DistributionDimensions::Particle(s) => StateProjection::S(2 * s + 2), // color mass
+                DistributionDimensions::Fractal(fractal_mode) => match fractal_mode {
+                    FractalDimensions::Quaternion => StateProjection::S(4),
+                    _ => StateProjection::S(2),
+                },
             }
-        };
+        }
+        self.projection_x = projection_x;
+        self.projection_y = projection_y;
+        self.projection_z = projection_z;
         self.set_projection_color(projection_color);
         self.selection_color = StateProjectionSelection::from(projection_color);
         self.selection_x = StateProjectionSelection::from(self.projection_x);
@@ -469,24 +505,23 @@ impl Plot3D {
 
     fn set_axis_labels(&mut self) {
         let dims = self.dimensionality().clone();
-        let num_dims = dims.number_of_dimensions();
         if self.parameters_are_shown() {
             self.set_x_label(
                 self.get_parameter()
                     .expect("Parameter exists if projection is Par"),
             );
-            if num_dims == 1 {
+            if let DistributionDimensions::State(1) = dims {
                 self.set_y_label("t");
                 self.set_z_label("S1");
             } else {
                 self.set_y_label(self.projection_y.mode_string_axis(&dims));
                 self.set_z_label(self.projection_z.mode_string_axis(&dims));
             }
-        } else if num_dims == 1 {
+        } else if let DistributionDimensions::State(1) = dims {
             self.set_x_label("S''");
             self.set_y_label("S'");
             self.set_z_label("S");
-        } else if num_dims == 2 {
+        } else if let DistributionDimensions::State(2) = dims {
             self.set_x_label("t");
             self.set_y_label("S1");
             self.set_z_label("S2");
@@ -537,31 +572,63 @@ impl Plot3D {
         let num_dims = dims.number_of_dimensions();
         let mut projection_vars_to_show = Vec::with_capacity(MAX_NUM_PROJECTIONS);
         let par = self.get_parameter();
+        let add_x_selector = if let DistributionDimensions::State(s) = dims {
+            s > 2
+        } else {
+            true
+        };
         if let Some(p) = par {
-            projection_vars_to_show.push(StateProjection::Par(p));
-        }
-        StateProjection::add_state_projection_vars(num_dims, &mut projection_vars_to_show);
-        let mut has_x_selected = false;
-        group_horizontal(ui, |ui| {
-            has_x_selected = StateProjection::projection_vars_selection(
-                "X",
-                self.projection_x.mode_string_choice(&dims),
-                &mut self.selection_x,
-                &projection_vars_to_show,
-                &dims,
-                ui,
-            );
-            if has_x_selected {
-                self.projection_x = if self.parameters_are_shown() {
-                    StateProjection::Par(par.unwrap())
-                } else {
-                    StateProjection::state(self.selection_x)
+            if add_x_selector {
+                projection_vars_to_show.push(StateProjection::Par(p));
+            } else {
+                let param_button_selected = self.parameters_are_shown();
+                if clickable_button(
+                    LABEL_TOGGLE_PARAM,
+                    param_button_selected,
+                    true,
+                    ui,
+                    TIP_TOGGLE_PARAM,
+                ) {
+                    self.reset_data();
+                    self.projection_x = if !param_button_selected {
+                        StateProjection::Par(p)
+                    } else {
+                        StateProjection::default() // not used since X-Axis is fixed
+                    };
+                    self.selection_x = StateProjectionSelection::from(self.projection_x);
                 }
             }
-        });
-        projection_vars_to_show.clear();
+        }
+        if add_x_selector {
+            StateProjection::add_state_projection_vars(num_dims, &mut projection_vars_to_show);
+        }
+        if !projection_vars_to_show.is_empty() {
+            group_horizontal(ui, |ui| {
+                let has_x_selected = StateProjection::projection_vars_selection(
+                    "X",
+                    self.projection_x.mode_string_choice(&dims),
+                    &mut self.selection_x,
+                    &projection_vars_to_show,
+                    &dims,
+                    ui,
+                );
+                if has_x_selected {
+                    self.projection_x = if self.parameters_are_shown() {
+                        StateProjection::Par(par.unwrap())
+                    } else {
+                        StateProjection::state(self.selection_x)
+                    }
+                }
+                projection_vars_to_show.clear();
+            });
+        }
         StateProjection::add_state_projection_vars(num_dims, &mut projection_vars_to_show);
-        if num_dims > 2 {
+        let add_y_and_z_selector = if let DistributionDimensions::State(s) = dims {
+            s > 2 || (s == 2 && self.parameters_are_shown())
+        } else {
+            true
+        };
+        if add_y_and_z_selector {
             group_horizontal(ui, |ui| {
                 let has_y_selected = StateProjection::projection_vars_selection(
                     "Y",
@@ -588,8 +655,6 @@ impl Plot3D {
                     self.projection_z = StateProjection::state(self.selection_z);
                 }
             });
-        } else if has_x_selected {
-            self.reset_data();
         }
         if let Some(p) = par {
             projection_vars_to_show.push(StateProjection::Par(p));
@@ -615,6 +680,29 @@ impl Plot3D {
             }
         });
         let options = self.options_mut();
+        group_horizontal(ui, |ui| {
+            add_checkbox(
+                "Fix bounds",
+                &mut options.fix_bounds,
+                ui,
+                TIP_TOGGLE_FIX_BOUNDS,
+            );
+            if options.fix_bounds {
+                ui.add(
+                    egui::DragValue::new(&mut options.bound_left)
+                        .speed(1.0)
+                        .clamp_range(-DRAG_BOUND_MAX..=DRAG_BOUND_MAX)
+                        .suffix(" Min"),
+                );
+                ui.add(
+                    egui::DragValue::new(&mut options.bound_right)
+                        .speed(1.0)
+                        .clamp_range(-DRAG_BOUND_MAX..=DRAG_BOUND_MAX)
+                        .suffix(" Max"),
+                );
+            }
+        });
+
         group_horizontal(ui, |ui| {
             float_slider(
                 LABEL_POINT_SIZE,
@@ -670,7 +758,6 @@ impl Plot3D {
     delegate! {
         to self.series_holder(){
             pub fn dimensionality(&self) -> &DistributionDimensions;
-            pub fn number_of_dimensions(&self) -> usize;
             pub fn get_parameter(&self) -> Option<&'static str>;
             pub fn get_parameter_values(&self) -> &Vec<f64>;
             pub fn with_parameter(&self)->bool;
