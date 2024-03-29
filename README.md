@@ -99,8 +99,8 @@ I would like to express my gratitude to the following authors and sources for pr
 - Hamadneh et al. for a **four-dimensional** *fractional chaotic map with constant and variable order*. [Publication](https://doi.org/10.3390/math11204332)
 
 ### Systems of Ordinary Differential Equations
-- Paul Bourke for the **Burke-Shaw** system, which is a three-dimensional chaotic system with different symmetries and bifurcations. [Website](https://paulbourke.net/fractals/burkwshaw)
-- Sambas et al. for the description of the **Genesio-Tesi** system in their work *Design, Analysis of the Genesio Tesi Chaotic System and its Electronic Experimental Implemenation* [Publication](https://paulbourke.net/fractals/burkwshaw)
+- Paul Bourke for the **Burke-Shaw** system, which is a three-dimensional chaotic system with different symmetries and bifurcations. [Website](https://paulbourke.net/fractals/burkeshaw)
+- Sambas et al. for the description of the **Genesio-Tesi** system in their work *Design, Analysis of the Genesio Tesi Chaotic System and its Electronic Experimental Implemenation* [Publication](https://www.researchgate.net/publication/303369826_Design_analysis_of_the_Genesio-Tesi_chaotic_system_and_its_electronic_experimental_implementation)
 - Zhang et al. for the *analysis of three species **Lotka-Volterra** food web models with omnivory*. [Publication](https://doi.org/10.1016/j.jmaa.2015.01.035)
 - Ababneh for a new **four-dimensional** chaotic attractor, which has a complex structure and a wide range of parameters. [Publication](https://doi.org/10.1016/j.asej.2016.08.020)
 - Wang, Feng and Chen for a new **four-dimensional** chaotic system. [Publication](https://doi.org/10.3389/fphy.2022.906138)
@@ -110,3 +110,5 @@ I would like to express my gratitude to the following authors and sources for pr
 - Gdawiec, Fariello and Santos for Algorithm 1 in *On the **quaternion** Julia sets via Picard–Mann iteration*. [Paper](https://doi.org/10.1007/s11071-023-08785-0)
 - Kumari et al. for Algorithm 3 in *A novel approach to generate Mandelbrot sets, Julia sets and **biomorphs** via viscosity approximation method*. [Paper](https://doi.org/10.1016/j.chaos.2022.112540)
 - Bankers et al. for their work *Julia and Mandelbrot Sets for Dynamics over the Hyperbolic Numbers*, which motivated me to include **Perplex** numbers in this project. Perplex (also known as hyperbolic) numbers are a variation of complex numbers that encode geometric properties of the Minkowski space. [Paper](https://doi.org/10.3390/fractalfract3010006)
+
+See my crate [perplex_num](https://github.com/tomtuamnuq/perplex_num) for additional information.
