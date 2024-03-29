@@ -607,7 +607,6 @@ dependencies = [
 [[package]]
 name = "egui-plotter"
 version = "0.3.0"
-source = "git+https://github.com/Gip-Gip/egui-plotter.git?branch=main#00888c032a2121c568c4174f898ed8402cc0e96e"
 dependencies = [
  "egui",
  "plotters",
@@ -1577,7 +1576,8 @@ checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
 [[package]]
 name = "perplex_num"
 version = "0.1.0"
-source = "git+https://github.com/tomtuamnuq/perplex_num.git?branch=main#fb5bbff05bc921ff42a82ce6a227ab0efa9f30ca"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65693c08398fccb447801c2d1c088aeca3083ffa50df613028293386ec4ea8a4"
 dependencies = [
  "approx",
  "nalgebra",

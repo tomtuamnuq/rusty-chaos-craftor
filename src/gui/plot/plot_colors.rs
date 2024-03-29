@@ -23,7 +23,7 @@ pub enum SeriesColors {
     BlackWhite,
     Bone,
     Copper,
-    // TODO DerivedColorMap(Vec<(f64, RGBColor)>),
+    // DerivedColorMap(Vec<(f64, RGBColor)>) possible as well
     #[default]
     MandelbrotHSL,
     ViridisRGB,

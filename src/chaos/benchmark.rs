@@ -1,13 +1,12 @@
-use std::{
-    sync::{Arc, Mutex},
-    thread,
-};
-// TODO use wasm threads
 use super::{
     data::{ChaosData, ChaosDataVec, InitialDistributionConfig, ValidStateCheck},
     execution::*,
 };
 use anyhow::Error;
+use std::{
+    sync::{Arc, Mutex},
+    thread,
+};
 use web_time::{Duration, Instant};
 pub struct ChaosInitSchema {
     pub num_samples: usize,
@@ -138,10 +137,11 @@ fn chaos_benchmark_run(
         ChaosDataVec::State4(data) => evaluate_chaos_data(data),
         ChaosDataVec::ParticleXY(data) => evaluate_chaos_data(data),
         ChaosDataVec::ParticleXYZ(data) => evaluate_chaos_data(data),
-        ChaosDataVec::FractalComplex(data) => evaluate_chaos_data(data), // TODO specific for fractal - num iterations
-        ChaosDataVec::FractalDual(data) => evaluate_chaos_data(data), // TODO specific for fractal - num iterations
-        ChaosDataVec::FractalPerplex(data) => evaluate_chaos_data(data), // TODO specific for fractal - num iterations
-        ChaosDataVec::FractalQuaternion(data) => evaluate_chaos_data(data), // TODO specific for fractal - num iterations
+        // TODO evaluate number of iterations for fractals
+        ChaosDataVec::FractalComplex(data) => evaluate_chaos_data(data),
+        ChaosDataVec::FractalDual(data) => evaluate_chaos_data(data),
+        ChaosDataVec::FractalPerplex(data) => evaluate_chaos_data(data),
+        ChaosDataVec::FractalQuaternion(data) => evaluate_chaos_data(data),
     };
     Ok(ChaosBenchmarkRun {
         runtime: elapsed,

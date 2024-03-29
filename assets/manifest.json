@@ -1,6 +1,6 @@
 {
-  "name": "RustyChaosCraftor PWA",
-  "short_name": "rusty-chaos-craftor-pwa",
+  "name": "Rusty-Chaos-Craftor",
+  "short_name": "Chaos Craftor",
   "icons": [
     {
       "src": "./icon-256.png",
