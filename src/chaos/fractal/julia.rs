@@ -52,7 +52,6 @@ impl<E: AlgebraElement> JuliaPicard<E> {
 }
 
 impl<E: AlgebraElement> FractalGenerator for JuliaPicard<E> {
-    // TODO add DOI
     type Element = E;
     fn is_set_element(&self, fractal: &mut FractalData<Self::Element>) -> bool {
         self.escape.check_escape(fractal)

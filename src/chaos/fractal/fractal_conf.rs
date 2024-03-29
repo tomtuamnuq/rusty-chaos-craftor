@@ -871,7 +871,6 @@ impl Default for MandelbrotBiomorphComplex {
 }
 impl Default for MandelbrotBiomorphDual {
     fn default() -> Self {
-        // TODO Dual
         Self {
             r: DEFAULT_BIOMORPH_R,
             m_re: -0.1,
@@ -946,7 +945,6 @@ impl Default for JuliaBiomorphComplex {
 }
 impl Default for JuliaBiomorphDual {
     fn default() -> Self {
-        // TODO Dual
         Self {
             r: DEFAULT_BIOMORPH_R,
             c_re: -0.01,

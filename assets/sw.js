@@ -1,3 +1,4 @@
+// progressive web application cache
 var cacheName = 'rusty-chaos-craftor-pwa';
 var filesToCache = [
   './',

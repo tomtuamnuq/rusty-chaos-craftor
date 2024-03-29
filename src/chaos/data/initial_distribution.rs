@@ -196,14 +196,11 @@ impl InitialDistributionVariant {
                 num_points,
                 rng,
             ),
-            InitialDistributionVariant::Exponential(d) => {
-                // TODO check d
-                data_gen_from_distribution(
-                    rand_distr::Exp::new(d.lambda.to_owned()).unwrap(),
-                    num_points,
-                    rng,
-                )
-            }
+            InitialDistributionVariant::Exponential(d) => data_gen_from_distribution(
+                rand_distr::Exp::new(d.lambda.to_owned()).unwrap(),
+                num_points,
+                rng,
+            ),
             InitialDistributionVariant::LogNormal(d) => data_gen_from_distribution(
                 rand_distr::LogNormal::new(d.mean.to_owned(), d.std_dev.to_owned()).unwrap(),
                 num_points,

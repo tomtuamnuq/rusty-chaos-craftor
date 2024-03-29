@@ -596,7 +596,7 @@ impl ChaosDescription for Zaslavskii {
     }
     fn reference(&self) -> &'static str {
         "https://wikipedia.org/wiki/Zaslavskii_map"
-    } // TODO http://www.scholarpedia.org/article/Zaslavsky_map
+    }
 }
 impl ChaosFormula for Zaslavskii {
     fn formula(&self) -> &[&'static str] {
