@@ -9,6 +9,7 @@ const DEFAULT_MANDELBROT_R: ChaosFloat = 2.0;
 const DEFAULT_BIOMORPH_R: ChaosFloat = 10.0;
 const DEFAULT_ITERATIONS_COLOR: usize = 255;
 pub const DEFAULT_ITERATIONS_PICARD: usize = 30;
+pub const DEFAULT_ITERATIONS_TRANSCENDENTAL: usize = 50;
 const DEFAULT_ITERATIONS_BIOMORPH: usize = 10;
 pub trait EscapeConf {
     fn max_iterations(&self) -> usize;
@@ -36,13 +37,11 @@ macro_rules! implement_escape_conf {
 
 implement_escape_conf! {
     MandelbrotPower DEFAULT_ITERATIONS_COLOR, [Complex, Dual, Perplex, Quaternion],
-    MandelbrotProbability DEFAULT_ITERATIONS_COLOR, [Complex, Dual, Perplex, Quaternion],
     MandelbrotSinus DEFAULT_ITERATIONS_COLOR, [Complex, Dual, Perplex, Quaternion],
     MandelbrotSinh DEFAULT_ITERATIONS_COLOR, [Complex, Dual, Perplex, Quaternion],
     MandelbrotZubieta DEFAULT_ITERATIONS_COLOR, [Complex, Dual, Perplex, Quaternion],
     MandelbrotBiomorph DEFAULT_ITERATIONS_BIOMORPH, [Complex, Dual, Perplex, Quaternion],
     JuliaPower DEFAULT_ITERATIONS_COLOR, [Complex, Dual, Perplex, Quaternion],
-    JuliaProbability DEFAULT_ITERATIONS_COLOR, [Complex, Dual, Perplex, Quaternion],
     JuliaSinus DEFAULT_ITERATIONS_COLOR, [Complex, Dual, Perplex, Quaternion],
     JuliaSinh DEFAULT_ITERATIONS_COLOR, [Complex, Dual, Perplex, Quaternion],
     JuliaZubieta DEFAULT_ITERATIONS_COLOR, [Complex, Dual, Perplex, Quaternion],
@@ -106,9 +105,7 @@ macro_rules! implement_simple_conf_with_a {
 }
 
 implement_simple_conf_with_a! {
-    MandelbrotProbability  [Complex, Dual, Perplex, Quaternion],
     MandelbrotPicard  [Complex, Dual, Perplex, Quaternion],
-    JuliaProbability  [Complex, Dual, Perplex, Quaternion],
     JuliaPicard  [Complex, Dual, Perplex, Quaternion]
 }
 
@@ -152,7 +149,7 @@ macro_rules! implement_simple_julia_conf {
 }
 
 implement_simple_julia_conf! {
-    Power, Probability, Sinus, Sinh, Zubieta, Picard, Biomorph
+    Power, Transcendental, Sinus, Sinh, Zubieta, Picard, Biomorph
 }
 
 pub trait MannConf {
@@ -178,8 +175,10 @@ macro_rules! implement_mann_conf {
 implement_mann_conf! {
     MandelbrotPicard [Complex, Dual, Perplex, Quaternion],
     MandelbrotBiomorph [Complex, Dual, Perplex, Quaternion],
+    MandelbrotTranscendental [Complex, Dual, Perplex, Quaternion],
     JuliaPicard [Complex, Dual, Perplex, Quaternion],
-    JuliaBiomorph [Complex, Dual, Perplex, Quaternion]
+    JuliaBiomorph [Complex, Dual, Perplex, Quaternion],
+    JuliaTranscendental [Complex, Dual, Perplex, Quaternion]
 }
 
 pub trait ViscosityConf {
@@ -377,6 +376,39 @@ impl ViscosityConf for JuliaBiomorphQuaternion {
     }
 }
 
+pub trait TransConf {
+    fn power_n(&self) -> i32;
+    fn par_a(&self) -> ChaosFloat;
+    fn par_b(&self) -> ChaosFloat;
+}
+macro_rules! implement_trans_conf {
+    ($($variant:ident [ $($elem:ident),* ] ),*)=> {
+        $(
+            paste!{
+                $(
+                    impl TransConf for [<$variant $elem>] {
+                        fn power_n(&self) -> i32 {
+                            self.n.round() as i32
+                        }
+                        fn par_a(&self) -> ChaosFloat{
+                            self.a
+                        }
+                        fn par_b(&self) -> ChaosFloat{
+                            self.b
+                        }
+                    }
+                )*
+            }
+
+        )*
+    };
+}
+
+implement_trans_conf! {
+    MandelbrotTranscendental [Complex, Dual, Perplex, Quaternion],
+    JuliaTranscendental [Complex, Dual, Perplex, Quaternion]
+}
+
 impl Default for MandelbrotPowerComplex {
     fn default() -> Self {
         Self {
@@ -406,38 +438,46 @@ impl Default for MandelbrotPowerQuaternion {
     }
 }
 
-impl Default for MandelbrotProbabilityComplex {
+impl Default for MandelbrotTranscendentalComplex {
+    // Table 2 - test Area -2 to 2
     fn default() -> Self {
         Self {
-            a: 0.99,
-            r: 1.0,
+            alpha: 0.3,
+            a: 3.0,
+            b: -0.00000001,
             n: 2.0,
         }
     }
 }
-impl Default for MandelbrotProbabilityDual {
+impl Default for MandelbrotTranscendentalDual {
+    // Table 2 - test Area -2 to 2 TODO Dual
     fn default() -> Self {
         Self {
-            a: 0.99,
-            r: 1.0,
+            alpha: 0.3,
+            a: 3.0,
+            b: -0.00000001,
             n: 2.0,
         }
     }
 }
-impl Default for MandelbrotProbabilityPerplex {
+impl Default for MandelbrotTranscendentalPerplex {
+    // Table 2 - test Area -2 to 2 TODO Perplex
     fn default() -> Self {
         Self {
-            a: 0.25,
-            r: 0.75,
+            alpha: 0.3,
+            a: 3.0,
+            b: -0.00000001,
             n: 2.0,
         }
     }
 }
-impl Default for MandelbrotProbabilityQuaternion {
+impl Default for MandelbrotTranscendentalQuaternion {
+    // Table 2 - test Area -2 to 2 TODO Quaternion
     fn default() -> Self {
         Self {
-            a: 0.99,
-            r: 1.0,
+            alpha: 0.3,
+            a: 3.0,
+            b: -0.00000001,
             n: 2.0,
         }
     }
@@ -582,48 +622,56 @@ impl Default for JuliaPowerQuaternion {
     }
 }
 
-impl Default for JuliaProbabilityComplex {
+impl Default for JuliaTranscendentalComplex {
+    // Table 4 - test area -10 to 10
     fn default() -> Self {
         Self {
-            c_re: -0.75,
-            c_im: 0.1,
-            a: 0.99,
-            r: 1.0,
-            n: 2.0,
-        }
-    }
-}
-impl Default for JuliaProbabilityDual {
-    fn default() -> Self {
-        Self {
-            c_re: -0.75,
-            c_im: 0.1,
-            a: 0.99,
-            r: 1.0,
-            n: 2.0,
-        }
-    }
-}
-impl Default for JuliaProbabilityPerplex {
-    fn default() -> Self {
-        Self {
-            c_re: -0.75,
+            c_re: 12.75,
             c_im: 0.0,
-            a: 0.99,
-            r: 2.0,
-            n: -2.0,
+            alpha: 0.0487654321,
+            a: 16.0,
+            b: -9.0,
+            n: 2.0,
         }
     }
 }
-impl Default for JuliaProbabilityQuaternion {
+impl Default for JuliaTranscendentalDual {
+    // Table 4 - test area -10 to 10 TODO Dual
     fn default() -> Self {
         Self {
-            c_w: -0.75,
-            c_i: 0.1,
-            c_j: 0.1,
-            c_k: 0.1,
-            a: 0.99,
-            r: 1.0,
+            c_re: 12.75,
+            c_im: 0.0,
+            alpha: 0.0487654321,
+            a: 16.0,
+            b: -9.0,
+            n: 2.0,
+        }
+    }
+}
+impl Default for JuliaTranscendentalPerplex {
+    // Table 4 - test area -10 to 10 TODO Perplex
+    fn default() -> Self {
+        Self {
+            c_re: 12.75,
+            c_im: 0.0,
+            alpha: 0.0487654321,
+            a: 16.0,
+            b: -9.0,
+            n: 2.0,
+        }
+    }
+}
+impl Default for JuliaTranscendentalQuaternion {
+    // Table 4 - test area -10 to 10 TODO Quaternion
+    fn default() -> Self {
+        Self {
+            c_w: 12.75,
+            c_i: 0.0,
+            c_j: 0.0,
+            c_k: 0.0,
+            alpha: 0.0487654321,
+            a: 16.0,
+            b: -9.0,
             n: 2.0,
         }
     }

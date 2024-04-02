@@ -142,7 +142,7 @@ create_and_implement_executor_variants! {
         Memristive 3,
         Sfsimm 4
     ]
-    [Power, Probability, Sinus, Sinh, Zubieta, Picard, Biomorph]
+    [Power, Transcendental, Sinus, Sinh, Zubieta, Picard, Biomorph]
     [
         Brusselator 2,
         VanDerPol 2,

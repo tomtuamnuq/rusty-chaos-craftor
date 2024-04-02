@@ -26,7 +26,6 @@ pub trait AlgebraElement {
     fn norm(&self) -> ChaosFloat;
     fn zero_element() -> Self;
     fn large_element() -> Self;
-    fn with_xy(&self, x: ChaosFloat, y: ChaosFloat) -> Self;
     fn real_norm(&self) -> ChaosFloat;
     fn imaginary_norm(&self) -> ChaosFloat;
 }
@@ -87,9 +86,6 @@ impl AlgebraElement for Complex {
     fn large_element() -> Self {
         Self::new(ChaosFloat::MAX, 0.0)
     }
-    fn with_xy(&self, x: ChaosFloat, y: ChaosFloat) -> Self {
-        Self::new(x, y)
-    }
     fn real_norm(&self) -> ChaosFloat {
         self.re.abs()
     }
@@ -143,9 +139,6 @@ impl AlgebraElement for Perplex {
     }
     fn large_element() -> Self {
         Self::new(ChaosFloat::MAX, 0.0)
-    }
-    fn with_xy(&self, x: ChaosFloat, y: ChaosFloat) -> Self {
-        Self::new(x, y)
     }
     fn real_norm(&self) -> ChaosFloat {
         self.t.abs()
@@ -212,9 +205,6 @@ impl AlgebraElement for Dual {
     fn large_element() -> Self {
         Self::new(ChaosFloat::MAX, 0.0)
     }
-    fn with_xy(&self, x: ChaosFloat, y: ChaosFloat) -> Self {
-        Self::new(x, y)
-    }
     fn real_norm(&self) -> ChaosFloat {
         self.re.abs()
     }
@@ -276,9 +266,6 @@ impl AlgebraElement for Quaternion {
     }
     fn large_element() -> Self {
         Self::new(ChaosFloat::MAX, 0.0, 0.0, 0.0)
-    }
-    fn with_xy(&self, x: ChaosFloat, y: ChaosFloat) -> Self {
-        Self::new(x, y, self.j, self.k)
     }
     fn real_norm(&self) -> ChaosFloat {
         self.w.abs()
@@ -367,9 +354,6 @@ impl Picard {
             alpha: params.alpha(),
         }
     }
-}
-
-impl Picard {
     pub fn alpha_k_max<P: MannConf + SimpleConf>(params: &P) -> ChaosFloat {
         let (alpha, k) = (params.alpha(), params.power_n());
         if k < 2 {
@@ -416,9 +400,6 @@ impl<E: AlgebraElement> Biomorph<E> {
             escape,
         }
     }
-}
-
-impl<E: AlgebraElement> Biomorph<E> {
     pub fn next_z_n(&self, z: &E, r: &E) -> E {
         if let Some(z_pow) = z.power(self.power_n) {
             let g_z = self.a.mul(z).add(&self.b);
@@ -437,5 +418,87 @@ impl<E: AlgebraElement> Biomorph<E> {
         if is_biomorph {
             fractal.set_biomorph()
         }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Transcendental {
+    a: ChaosFloat,
+    b: ChaosFloat,
+    power_n: i32,
+    alpha: ChaosFloat,
+    alpha_b_max: ChaosFloat,
+}
+
+impl Transcendental {
+    pub fn new<P: MannConf + TransConf>(params: P) -> Self {
+        Self {
+            a: params.par_a(),
+            b: params.par_b(),
+            power_n: params.power_n(),
+            alpha: params.alpha(),
+            alpha_b_max: Self::alpha_b_max(&params),
+        }
+    }
+    pub fn alpha_b_max<P: MannConf + TransConf>(params: &P) -> ChaosFloat {
+        let (alpha, n) = (params.alpha(), params.power_n());
+        if n < 2 {
+            0.0
+        } else {
+            let n = n as ChaosFloat;
+            let b = params.par_b().abs();
+            (b + 2.0 / alpha).powf(1.0 / (n - 1.0))
+        }
+    }
+    fn q_c<E: AlgebraElement>(&self, z: &E, c: &E) -> E {
+        match z.power(self.power_n) {
+            Some(z_pow) => z_pow
+                .exponential()
+                .scale(self.a)
+                .add(&z.scale(self.b))
+                .add(c),
+            None => E::large_element(),
+        }
+    }
+    pub fn is_set_element<E: AlgebraElement>(&self, c: &E, fractal: &mut FractalData<E>) -> bool {
+        let n = fractal.num_iterations();
+        match n.cmp(&DEFAULT_ITERATIONS_TRANSCENDENTAL) {
+            Ordering::Less => {
+                let is_set_element = {
+                    let z_norm = fractal.z_n().norm();
+                    let r_1 = c.norm().max(self.alpha_b_max);
+                    if r_1 < z_norm {
+                        false
+                    } else {
+                        let power_1_n = if self.power_n == 0 {
+                            1.0
+                        } else {
+                            1.0 / (self.power_n as f64)
+                        };
+                        match fractal.z_0().power(self.power_n) {
+                            Some(z_pow) => {
+                                let r_2 = (self.a.abs() * z_pow.real()).powf(power_1_n);
+                                r_2 < z_norm
+                            }
+                            None => false,
+                        }
+                    }
+                };
+
+                if !is_set_element && n == 0 {
+                    fractal.set_first()
+                }
+                is_set_element
+            }
+            Ordering::Equal => {
+                fractal.set_last();
+                false
+            }
+            Ordering::Greater => false,
+        }
+    }
+    pub fn next_z_n<E: AlgebraElement>(&self, z: &E, c: &E) -> E {
+        let q_z = self.q_c(z, c);
+        q_z.scale(self.alpha).add(&z.scale(1.0 - self.alpha))
     }
 }

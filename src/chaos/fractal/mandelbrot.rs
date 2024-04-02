@@ -113,6 +113,40 @@ impl<E: AlgebraElement> DiscreteMap for MandelbrotBiomorph<E> {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct MandelbrotTranscendental<E> {
+    trans: Transcendental,
+    algebra_element_type: PhantomData<E>,
+}
+
+impl<E: AlgebraElement> MandelbrotTranscendental<E> {
+    pub fn new<P: MannConf + TransConf>(params: P) -> Self {
+        let trans = Transcendental::new(params);
+        Self {
+            trans,
+            algebra_element_type: PhantomData,
+        }
+    }
+}
+
+impl<E: AlgebraElement + Clone> FractalGenerator for MandelbrotTranscendental<E> {
+    type Element = E;
+    fn is_set_element(&self, fractal: &mut FractalData<Self::Element>) -> bool {
+        let z_0 = fractal.z_0().clone();
+        self.trans.is_set_element(&z_0, fractal)
+    }
+    fn next_z_n(&self, fractal: &FractalData<Self::Element>) -> Self::Element {
+        self.trans.next_z_n(fractal.z_n(), fractal.z_0())
+    }
+}
+
+impl<E: AlgebraElement + Clone> DiscreteMap for MandelbrotTranscendental<E> {
+    type State = FractalData<E>;
+    fn execute(&self, v: &mut FractalData<E>, t: &Time) {
+        self.iteration(v, t)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
