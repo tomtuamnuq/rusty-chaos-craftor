@@ -522,7 +522,7 @@ impl_discrete_variants! {
     KaplanYorke, SimpleDiscreteMap, { [alpha, "α"] },
     Rulkov, SimpleDiscreteMap, { [alpha, "α"],  [mu, "μ"], [delta, "δ"] },
     Zaslavskii, SimpleDiscreteMap, { [eps, "ε"], [nu, "ν"], [r, "r"] },
-    ReverseProbability, SimpleDiscreteMap, { [c_re, " c real"], [c_im, "c imaginary"], [r_threshold, "R"] },
+    ReverseProbability, SimpleDiscreteMap, { [c_re, "c real"], [c_im, "c imaginary"], [r_threshold, "R"] },
     Shah, SimpleDiscreteMap, { [alpha, "α"], [beta, "β"], [gamma, "γ"], [delta, "δ"] },
     Memristive, SimpleDiscreteMap, { [k, "k"], [a, "a"] },
     Sfsimm, SimpleDiscreteMap, { [p, "p"], [b, "b"], [r, "r"] },

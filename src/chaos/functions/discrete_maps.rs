@@ -614,7 +614,7 @@ impl DiscreteMap for ReverseProbability {
     fn execute(&self, v: &mut Self::State, _t: &Time) {
         let x = v[0];
         let y = v[1];
-        let r_gen = rand_distr::Uniform::new(0.0, 1.0);
+        let r_gen: rand_distr::Uniform<ChaosFloat> = rand_distr::Uniform::new(0.0, 1.0);
         let mut rng = rand::thread_rng();
         let r = r_gen.sample(&mut rng);
         let s = if r <= self.r_threshold { -1.0 } else { 1.0 };
@@ -638,7 +638,7 @@ impl Default for ReverseProbability {
 
 impl ChaosDescription for ReverseProbability {
     fn description(&self) -> String {
-        String::from("Adjusted probability reverse Julia by Roger Bagula and Paul Bourke.")
+        format!("Adjusted probability reverse Julia by Roger Bagula and Paul Bourke. Try the trajectory of the start state z=Complex(x=0, y=0). Currently chosen is c=Complex({:.2}, {:.2}) and R={:.2}", self.c_re, self.c_im, self.r_threshold)
     }
     fn reference(&self) -> &'static str {
         "https://paulbourke.net/fractals/reversejulia/"

@@ -439,40 +439,37 @@ impl Default for MandelbrotPowerQuaternion {
 }
 
 impl Default for MandelbrotTranscendentalComplex {
-    // Table 2 - test Area -2 to 2
     fn default() -> Self {
         Self {
-            alpha: 0.3,
-            a: 3.0,
-            b: -0.00000001,
-            n: 2.0,
+            alpha: 0.25,
+            a: 1.0,
+            b: -0.5,
+            n: 3.0,
         }
     }
 }
 impl Default for MandelbrotTranscendentalDual {
-    // Table 2 - test Area -2 to 2 TODO Dual
     fn default() -> Self {
         Self {
             alpha: 0.3,
-            a: 3.0,
-            b: -0.00000001,
-            n: 2.0,
+            a: 0.1,
+            b: -0.1,
+            n: 3.0,
         }
     }
 }
 impl Default for MandelbrotTranscendentalPerplex {
-    // Table 2 - test Area -2 to 2 TODO Perplex
     fn default() -> Self {
         Self {
-            alpha: 0.3,
-            a: 3.0,
-            b: -0.00000001,
+            alpha: 0.1,
+            a: 0.2,
+            b: -1.0,
             n: 2.0,
         }
     }
 }
 impl Default for MandelbrotTranscendentalQuaternion {
-    // Table 2 - test Area -2 to 2 TODO Quaternion
+    // Table 2 - test Area -2 to 2
     fn default() -> Self {
         Self {
             alpha: 0.3,
@@ -623,56 +620,52 @@ impl Default for JuliaPowerQuaternion {
 }
 
 impl Default for JuliaTranscendentalComplex {
-    // Table 4 - test area -10 to 10
     fn default() -> Self {
         Self {
-            c_re: 12.75,
+            c_re: 2.0,
             c_im: 0.0,
-            alpha: 0.0487654321,
-            a: 16.0,
-            b: -9.0,
+            alpha: 0.2,
+            a: 2.0,
+            b: -1.0,
             n: 2.0,
         }
     }
 }
 impl Default for JuliaTranscendentalDual {
-    // Table 4 - test area -10 to 10 TODO Dual
     fn default() -> Self {
         Self {
-            c_re: 12.75,
+            c_re: 1.0,
             c_im: 0.0,
             alpha: 0.0487654321,
-            a: 16.0,
-            b: -9.0,
+            a: 0.1,
+            b: -0.1,
             n: 2.0,
         }
     }
 }
 impl Default for JuliaTranscendentalPerplex {
-    // Table 4 - test area -10 to 10 TODO Perplex
     fn default() -> Self {
         Self {
-            c_re: 12.75,
+            c_re: 0.5,
             c_im: 0.0,
-            alpha: 0.0487654321,
-            a: 16.0,
-            b: -9.0,
+            alpha: 0.1,
+            a: 0.1,
+            b: 1.0,
             n: 2.0,
         }
     }
 }
 impl Default for JuliaTranscendentalQuaternion {
-    // Table 4 - test area -10 to 10 TODO Quaternion
     fn default() -> Self {
         Self {
-            c_w: 12.75,
-            c_i: 0.0,
+            c_w: 1.0,
+            c_i: 1.0,
             c_j: 0.0,
             c_k: 0.0,
             alpha: 0.0487654321,
-            a: 16.0,
-            b: -9.0,
-            n: 2.0,
+            a: 2.0,
+            b: -1.0,
+            n: 3.0,
         }
     }
 }
