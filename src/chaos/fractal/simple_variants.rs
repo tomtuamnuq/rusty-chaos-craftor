@@ -3,11 +3,9 @@ use super::fractal_data::*;
 use super::fractal_generator::*;
 use super::julia::JuliaSimple;
 use super::mandelbrot::MandelbrotSimple;
-use crate::chaos::data::ChaosFloat;
 use crate::chaos::data::Time;
 use crate::chaos::functions::DiscreteMap;
 use paste::paste;
-use rand_distr::Distribution;
 
 #[derive(Clone, Debug)]
 pub struct SimplePower {
@@ -25,35 +23,6 @@ impl SimpleFractalFn for SimplePower {
             Some(z) => z.add(c),
             None => E::large_element(),
         }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct SimpleProbability {
-    r_gen: rand_distr::Uniform<ChaosFloat>,
-    r_threshold: ChaosFloat,
-    power_1_n: ChaosFloat,
-}
-
-impl SimpleFractalFn for SimpleProbability {
-    fn new<C: SimpleConf>(conf: C) -> Self {
-        let r_gen = rand_distr::Uniform::new(0.0, 1.0);
-        Self {
-            r_gen,
-            r_threshold: conf.par_a(),
-            power_1_n: 1.0 / (conf.power_n() as ChaosFloat),
-        }
-    }
-    fn next_z_n<E: AlgebraElement>(&self, z: &E, c: &E) -> E {
-        // https://paulbourke.net/fractals/reversejulia/
-        let mut rng = rand::thread_rng();
-        let r = self.r_gen.sample(&mut rng);
-        let s = if r <= self.r_threshold { -1.0 } else { 1.0 };
-        let scalar = s * z.sub(c).norm().powf(self.power_1_n);
-        let sigma = z.arg() / 2.0;
-        let re = scalar * sigma.cos();
-        let im = scalar * sigma.sin();
-        z.with_xy(re, im)
     }
 }
 
@@ -161,4 +130,4 @@ macro_rules! generate_simple_variants {
     };
 }
 
-generate_simple_variants! {Power, Probability, Sinus, Sinh, Zubieta}
+generate_simple_variants! {Power, Sinus, Sinh, Zubieta}

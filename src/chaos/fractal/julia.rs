@@ -111,6 +111,36 @@ impl<E: AlgebraElement> DiscreteMap for JuliaBiomorph<E> {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct JuliaTranscendental<E> {
+    c: E,
+    trans: Transcendental,
+}
+
+impl<E: AlgebraElement> JuliaTranscendental<E> {
+    pub fn new<P: JuliaConf<Element = E> + MannConf + TransConf>(params: P) -> Self {
+        let c = params.c();
+        let trans = Transcendental::new(params);
+        Self { c, trans }
+    }
+}
+
+impl<E: AlgebraElement> FractalGenerator for JuliaTranscendental<E> {
+    type Element = E;
+    fn is_set_element(&self, fractal: &mut FractalData<Self::Element>) -> bool {
+        self.trans.is_set_element(&self.c, fractal)
+    }
+    fn next_z_n(&self, fractal: &FractalData<Self::Element>) -> Self::Element {
+        self.trans.next_z_n(fractal.z_n(), &self.c)
+    }
+}
+
+impl<E: AlgebraElement> DiscreteMap for JuliaTranscendental<E> {
+    type State = FractalData<E>;
+    fn execute(&self, v: &mut FractalData<E>, t: &Time) {
+        self.iteration(v, t)
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;

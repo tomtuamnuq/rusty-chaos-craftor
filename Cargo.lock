@@ -607,6 +607,7 @@ dependencies = [
 [[package]]
 name = "egui-plotter"
 version = "0.3.0"
+source = "git+https://github.com/Gip-Gip/egui-plotter.git?branch=main#00888c032a2121c568c4174f898ed8402cc0e96e"
 dependencies = [
  "egui",
  "plotters",

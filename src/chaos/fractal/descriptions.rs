@@ -35,6 +35,7 @@ impl PrettyPrintElem for Quaternion {
 macro_rules! implement_description {
     ($($elem:ident ),*)=> {
         const LABEL_ITER_ESCAPE_COLOR: &str = "Iteration criteria: num iter < 255";
+        const LABEL_ITER_ESCAPE_TRANS: &str = "Iteration criteria: num iter < 50";
         const LABEL_ITER_ESCAPE_PICARD: &str = "Iteration criteria: num iter < 30";
         const LABEL_ITER_ESCAPE_BIOMORPH: &str = "Iteration criteria: num iter < 10";
         paste!{
@@ -76,45 +77,45 @@ macro_rules! implement_description {
                     }
                 }
 
-                impl ChaosDescription for [<MandelbrotProbability $elem>] {
+                impl ChaosDescription for [<MandelbrotTranscendental $elem>] {
                     fn description(&self) -> String{
-                        format!("Adjusted probability reverse Julia adaptation for a Mandelbrot set. Inspired by Roger Bagula and Paul Bourke. Chosen is n={} and a={:.2}", self.power_n(), self.par_a())
+                        format!("Entire transcendental function adaptation for a Mandelbrot set. Chosen is n={} a={:.2} and b={:.2} ", self.power_n(), self.par_a(), self.par_b())
                     }
                     fn reference(&self) -> &'static str{
-                        "https://paulbourke.net/fractals/reversejulia/"
+                        "https://www.mdpi.com/2504-3110/6/7/397"
                     }
                 }
-                impl ChaosFormula for [<MandelbrotProbability $elem>]{
+                impl ChaosFormula for [<MandelbrotTranscendental $elem>]{
                     fn formula(&self) -> &[&'static str]{
                         &[
-                            "p= Uniform(0, 1)",
-                            "s= 1 if p > a else -1",
-                            "z re= s (||z - z0||)^(1/n) cos(arg(z)/2)",
-                            "z im= s (||z - z0||)^(1/n) sin(arg(z)/2)",
+                            "q= a exp(z^n) + b z + z0",
+                            "z= α q + (1 - α) z",
                             "z0 from initial distribution",
-                            "Bounding criteria: |z| < r",
-                            LABEL_ITER_ESCAPE_COLOR
+                            "R_1= max(|z0|, (|b| + 2 / α)^(1 / (n - 1) )",
+                            "R_2= (|a| Re(z0^n))^(1 / n)",
+                            "Bounding criteria: |z| < R_1 & R_2 < |z|",
+                            LABEL_ITER_ESCAPE_TRANS
                         ]
                     }
                 }
-                impl ChaosDescription for [<JuliaProbability $elem>] {
+                impl ChaosDescription for [<JuliaTranscendental $elem>] {
                     fn description(&self) -> String{
-                        format!("Adjusted probability reverse Julia by Roger Bagula and Paul Bourke. Chosen is n={}, a={:.2} and c={}", self.power_n(), self.par_a(), self.c().pretty_print())
+                        format!("Transcendental function using mann iterative scheme. See the paper 'A Brief Study on Julia Sets in the Dynamics of Entire Transcendental Function Using Mann Iterative Scheme' by Prajapati et al. Chosen is n={}, a={:.2} b={:.2} and c={}", self.power_n(), self.par_a(), self.par_b(), self.c().pretty_print())
                     }
                     fn reference(&self) -> &'static str{
-                        "https://paulbourke.net/fractals/reversejulia/"
+                        "https://www.mdpi.com/2504-3110/6/7/397"
                     }
                 }
-                impl ChaosFormula for [<JuliaProbability $elem>]{
+                impl ChaosFormula for [<JuliaTranscendental $elem>]{
                     fn formula(&self) -> &[&'static str]{
                         &[
-                            "p= Uniform(0, 1)",
-                            "s= 1 if p > a else -1",
-                            "z re= s (||z - c||)^(1/n) cos(arg(z)/2)",
-                            "z im= s (||z - c||)^(1/n) sin(arg(z)/2)",
+                            "q= a exp(z^n) + b z + c",
+                            "z= α q + (1 - α) z",
                             "z0 from initial distribution",
-                            "Bounding criteria: |z| < r",
-                            LABEL_ITER_ESCAPE_COLOR
+                            "R_1= max(|c|, (|b| + 2 / α)^(1 / (n - 1) )",
+                            "R_2= (|a| Re(z0^n))^(1 / n)",
+                            "Bounding criteria: |z| < R_1 & R_2 < |z|",
+                            LABEL_ITER_ESCAPE_TRANS
                         ]
                     }
                 }
