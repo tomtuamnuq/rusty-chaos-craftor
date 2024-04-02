@@ -138,6 +138,7 @@ create_and_implement_executor_variants! {
         KaplanYorke 2,
         Rulkov 2,
         Zaslavskii 2,
+        ReverseProbability 2,
         Shah 3,
         Memristive 3,
         Sfsimm 4

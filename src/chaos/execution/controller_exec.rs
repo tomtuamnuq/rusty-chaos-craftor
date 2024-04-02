@@ -38,7 +38,8 @@ macro_rules! try_init_from_chaos_data {
                         Gingerbreadman,
                         KaplanYorke,
                         Rulkov,
-                        Zaslavskii
+                        Zaslavskii,
+                        ReverseProbability
                     ],
                     [Brusselator, VanDerPol, QuadrupTwoOrbit]
                 );

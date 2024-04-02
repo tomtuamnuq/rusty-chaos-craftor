@@ -1,6 +1,7 @@
 use super::chaotic_function_configs::*;
 use crate::chaos::data::*;
 use crate::chaos::labels::{ChaosDescription, ChaosFormula};
+use rand_distr::Distribution;
 use std::f64::consts::PI;
 pub trait DiscreteMap {
     type State;
@@ -604,6 +605,52 @@ impl ChaosFormula for Zaslavskii {
             "x= (x + ν (1 + μ y) + ε ν μ cos(2π x)) mod 1",
             "y= exp(-r) (y + ε cos(2π x))",
             "μ= (1 - exp(-r)) / r",
+        ]
+    }
+}
+
+impl DiscreteMap for ReverseProbability {
+    type State = State2;
+    fn execute(&self, v: &mut Self::State, _t: &Time) {
+        let x = v[0];
+        let y = v[1];
+        let r_gen = rand_distr::Uniform::new(0.0, 1.0);
+        let mut rng = rand::thread_rng();
+        let r = r_gen.sample(&mut rng);
+        let s = if r <= self.r_threshold { -1.0 } else { 1.0 };
+        let re = x - self.c_re;
+        let im = y - self.c_im;
+        let scalar = s * (re * re + im * im).powf(0.25);
+        let sigma = y.atan2(x) / 2.0;
+        v[0] = scalar * sigma.cos();
+        v[1] = scalar * sigma.sin();
+    }
+}
+impl Default for ReverseProbability {
+    fn default() -> Self {
+        Self {
+            c_re: -0.745,
+            c_im: 0.113,
+            r_threshold: 0.97,
+        }
+    }
+}
+
+impl ChaosDescription for ReverseProbability {
+    fn description(&self) -> String {
+        String::from("Adjusted probability reverse Julia by Roger Bagula and Paul Bourke.")
+    }
+    fn reference(&self) -> &'static str {
+        "https://paulbourke.net/fractals/reversejulia/"
+    }
+}
+impl ChaosFormula for ReverseProbability {
+    fn formula(&self) -> &[&'static str] {
+        &[
+            "p= Uniform(0, 1)",
+            "s= 1 if p > R else -1",
+            "z re= s √(||z - c||) cos(arg(z)/2)",
+            "z im= s √(||z - c||) sin(arg(z)/2)",
         ]
     }
 }
