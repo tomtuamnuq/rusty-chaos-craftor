@@ -34,7 +34,7 @@ web-time = "0.2.4"
 
 ode_solvers = "0.4"
 rand_distr = "0.4"
-rand = "0.8"
+rand = "0.9"
 nalgebra = "0.32"
 num-dual = "0.8"
 
